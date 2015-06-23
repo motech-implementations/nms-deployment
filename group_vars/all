@@ -1,0 +1,14 @@
+---
+# Variables listed here are applicable to all host groups
+
+httpd_port: 80
+ntpserver: 192.168.1.2
+mds_vip: 10.203.10.52
+mds_log: /var/log/nms_db_keep.log
+mdsdb1_hostname: mdsdb1
+
+mysql_url: jdbc\:mysql\://10.203.10.25\:3306/
+
+jms_url: tcp\://10.203.10.50\:61616
+
+repo_home: /home/vagrant/manjot/

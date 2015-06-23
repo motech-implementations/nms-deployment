@@ -1,0 +1,18 @@
+---
+# variable for webserver
+motech_version: motech-platform-server.war
+nms_appname: [ 'api','csv','flw','kilkari','props','imi','mobile-academy','region' ]
+nms_appversion: [ '0.1-SNAPSHOT','0.1-SNAPSHOT','0.1-SNAPSHOT' ,'0.1-SNAPSHOT' ,'0.1-SNAPSHOT' ,'0.1-SNAPSHOT' ,'0.1-SNAPSHOT' ,'0.1-SNAPSHOT'  ]
+tomcat_dir: '/home/vagrant/apache-tomcat-7.0.57'
+tomcat_port: 8080
+tomcat_shutdown_port: 8005
+tomcat_ajp_port: 8009
+tomcat_redirect_port: 8443
+tomcat_connection_timeout: 20000
+tomcat_users: [
+  { name: 'tomcat', password: 'tomcat', roles: 'tomcat,admin-gui'}
+ ]
+tomcat_log_dir: '/home/vagrant/apache-tomcat-7.0.57/logs'
+
+
+
