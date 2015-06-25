@@ -1,0 +1,34 @@
+
+vrrp_script check_mysql {
+   script "/usr/local/sbin/keepalived_check.sh"
+
+   interval 4
+#   weight 2
+}
+
+
+vrrp_instance VI_1 {
+    state BACKUP
+    interface enp0s8
+    priority 88
+    virtual_router_id 60
+    authentication {
+    auth_type PASS
+    auth_pass abc123
+    }
+    virtual_ipaddress {
+      {{ mds_vip }}
+    }
+
+    nopreempt
+    notify_master /usr/local/sbin/mysql_master.sh
+    notify_backup /usr/local/sbin/mysql_backup.sh
+    notify_fault /usr/local/sbin/track.sh
+
+    track_script {
+      check_mysql
+    }
+  }
+
+
+

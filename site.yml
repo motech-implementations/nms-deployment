@@ -1,0 +1,38 @@
+---
+# This playbook deploys the whole application stack in this site.  
+
+
+- name: configure and deploy the webservers and application code
+  hosts: webservers
+  remote_user: vagrant
+  roles:
+    - web
+  tags:
+    - web
+
+- name: configure and deploy the dbserver and application code
+  hosts: dbservers
+  remote_user: vagrant
+  roles:
+    - db
+  tags:
+    - db
+
+
+- name: configure and deploy keepalived
+  hosts: dbservers
+  remote_user: vagrant
+  serial: 1
+  tasks:
+    - include:  roles/db/tasks/keepalived.yml
+  tags:
+    - keep 
+
+- name: configure and deploy activemq
+  hosts: dbservers
+  remote_user: vagrant
+  serial: 1
+  tasks:
+    - include:  roles/db/tasks/activemq.yml
+  tags:
+    - active

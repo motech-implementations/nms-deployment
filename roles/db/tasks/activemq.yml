@@ -1,0 +1,40 @@
+---
+# This Playbook is to configure Activemq
+
+- name: ActiveMq Copy activemq configuration file
+  template:
+      src=master/activemq.xml.j2
+      dest={{ activemqpath }}/conf/activemq.xml
+  run_once: true
+  delegate_to: "{{ mdsdb1_ip }}"
+  become: yes
+  become_method: sudo
+
+- name: ActiveMq Copy activemq configuration file
+  template:
+     src=slave/activemq.xml.j2
+     dest={{ activemqpath }}/conf/activemq.xml
+  run_once: true
+  delegate_to: "{{ mdsdb2_ip }}"
+  become: yes
+  become_method: sudo 
+
+- name: Create DB for activemq
+  mysql_db:
+    login_user={{ appdbuser }}
+    login_password={{ appdbpassword }}
+    name=activemq
+    state=present
+  run_once: true
+  delegate_to: "{{ mdsdb1_ip }}"
+
+- name: ActiveMq Copy mysql connector
+  copy: src={{ repo_home }}MOTECH/mysql-connector-java-5.1.34-bin.jar
+        dest={{ activemqpath }}/lib/
+  become: yes
+  become_method: sudo
+
+- name: ActiveMq Starting ActiveMq
+  shell:
+        "nohup {{ activemqpath }}/bin/activemq start &"
+

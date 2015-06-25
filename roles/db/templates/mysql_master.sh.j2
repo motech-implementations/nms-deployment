@@ -1,0 +1,35 @@
+export MYSQL_HOME=/usr/
+export PATH=$MYSQL_HOME/bin:$PATH
+mysql="$MYSQL_HOME/bin/mysql"
+
+echo "============================================" >> "{{ mds_log }}"
+echo `date` >> "{{ mds_log }}"
+
+host=`hostname`
+echo $host >> "{{ mds_log }}"
+
+if [ $host = ""{{ mdsdb1_hostname }}"" ]
+then
+  slave_host="{{ mdsdb2_ip }}"
+  new_master="{{ mdsdb1_ip }}"
+else
+  slave_host="{{ mdsdb1_ip }}"
+  new_master="{{ mdsdb2_ip }}"
+fi
+
+echo "slave_host = " $slave_host >>  "{{ mds_log }}"
+echo "new_master = " $new_master >>  "{{ mds_log }}"
+
+echo $host "I am entering Master" >>  "{{ mds_log }}"
+
+$mysql -p{{ rootpassword }} -u root -e "SET GLOBAL read_only=false;"
+echo "Setting Global variable status = " $? >>  "{{ mds_log }}"
+
+
+mysqlrpladmin --slaves={{ replmgmtuser }}:'{{ replmgmtpaswd }}'@$new_master:3306 --candidates={{ replmgmtuser }}:'{{ replmgmtpaswd }}'@$new_master:3306 failover >> "{{ mds_log }}"
+
+echo "Failover status = " $? >> "{{ mds_log }}"
+exit 0
+
+#mysqlrpladmin --master=root@'$prev_master':3306 --slaves=root@$slave_host':3306 --new-master=root@'$slave_host':3306 --demote-master switchover
+

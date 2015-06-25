@@ -1,0 +1,77 @@
+---
+
+- name: Stop Tomcat
+  shell:
+    "nohup {{ ansible_env.CATALINA_HOME }}/bin/catalina.sh stop &"
+
+- name: configures server.xml
+  template:
+    src=server.xml.j2
+    dest="{{ ansible_env.CATALINA_HOME }}/conf/server.xml"
+  
+- name: configures tomcat-users.xml
+  template:
+    src="tomcat-users.xml.j2"
+    dest="{{ ansible_env.CATALINA_HOME }}/conf/tomcat-users.xml"
+
+- name: making .motech directory in user home
+  file: path={{ ansible_env.HOME }}/.motech state=directory
+
+- name: Wait for Web server to Stop
+  wait_for: host={{ inventory_hostname }} port=8080 state=stopped timeout=80
+  
+- name: making bundle directory  
+  file: path={{ ansible_env.HOME }}/.motech/bundles state=directory
+
+- name: making config directory  
+  file: path={{ ansible_env.HOME }}/.motech/config state=directory
+
+- name: Copying the bootstrap configuration file
+  template: 
+    src="bootstrap.properties.j2"
+    dest="{{ ansible_env.HOME }}/.motech/config/bootstrap.properties"
+
+- name: Copying Log4j configuration files
+  template:
+    src="log4j.properties.j2"
+    dest="{{ ansible_env.HOME }}/.motech/config/log4j.properties"
+
+- name: Copying the motech-settings.properties configuration file
+  template: 
+    src="motech-settings.properties.j2"
+    dest="{{ ansible_env.HOME }}/.motech/config/motech-settings.properties"
+
+- name: Copying MOTECH WAR file
+  copy: src={{ repo_home }}MOTECH/{{ motech_version }} dest={{ ansible_env.CATALINA_HOME }}/webapps/
+
+- name: Deleting the old files
+  file: path={{ ansible_env.HOME }}/.motech/bundles/{{ item.0 }}-{{ item.1 }}.jar state=absent
+  with_together:
+     - nms_appname 
+     - nms_appversion
+- name: Copying the Application JAR files as mentioned in Variable Array
+  copy: src={{ repo_home }}NMS/{{ item.0 }}-{{ item.1 }}.jar dest={{ ansible_env.HOME }}/.motech/bundles/
+  with_together:
+     - nms_appname 
+     - nms_appversion
+
+- name: Start Tomcat
+  shell:
+    "nohup {{ ansible_env.CATALINA_HOME }}/bin/catalina.sh start &"
+
+- name: Start firewall Service
+  service: name=firewalld state=started enabled=yes
+  become: yes
+  become_method: sudo
+
+- name: Add Tomcat port in Firewall
+  shell:
+        firewall-cmd --zone=public --add-port={{ tomcat_port }}/tcp --permanent
+  become: yes
+  become_method: sudo
+
+- name: Reload firewall 
+  shell:
+        firewall-cmd --reload
+  become: yes
+  become_method: sudo
