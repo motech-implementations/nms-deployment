@@ -4,7 +4,7 @@
 
 - name: configure and deploy the webservers and application code
   hosts: webservers
-  remote_user: vagrant
+  remote_user: grameen
   roles:
     - web
   tags:
@@ -12,7 +12,7 @@
 
 - name: configure and deploy the dbserver and application code
   hosts: dbservers
-  remote_user: vagrant
+  remote_user: grameen
   roles:
     - db
   tags:
@@ -21,7 +21,7 @@
 
 - name: configure and deploy keepalived
   hosts: dbservers
-  remote_user: vagrant
+  remote_user: grameen
   serial: 1
   tasks:
     - include:  roles/db/tasks/keepalived.yml
@@ -30,7 +30,7 @@
 
 - name: configure and deploy activemq
   hosts: dbservers
-  remote_user: vagrant
+  remote_user: grameen
   serial: 1
   tasks:
     - include:  roles/db/tasks/activemq.yml

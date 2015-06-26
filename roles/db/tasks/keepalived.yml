@@ -3,7 +3,7 @@
      src=master/keepalived.conf.j2
      dest=/etc/keepalived/keepalived.conf
   run_once: true
-  delegate_to: "{{ mdsdb1_ip }}"
+  delegate_to: "{{ sshmdsdb1_ip }}"
   become: yes
   become_method: sudo
 
@@ -12,7 +12,7 @@
      src=slave/keepalived.conf.j2
      dest=/etc/keepalived/keepalived.conf
   run_once: true
-  delegate_to: "{{ mdsdb2_ip }}"
+  delegate_to: "{{ sshmdsdb2_ip }}"
   become: yes
   become_method: sudo
 

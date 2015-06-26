@@ -9,7 +9,7 @@ vrrp_script check_mysql {
 
 vrrp_instance VI_1 {
     state MASTER
-    interface enp0s8
+    interface team0
     priority 90
     virtual_router_id 60
     authentication {

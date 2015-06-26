@@ -1,17 +1,17 @@
 ---
 # This playbook will install mysql and create db user and give permissions.
 
-- name: Install Mysql package
-  yum: name={{ item }} state=installed
-  with_items:
-   - http://dev.mysql.com/get/mysql-community-release-el7-5.noarch.rpm 
-   - mysql-community-server
-   - mysql-community-client
-   - mysql-connector-python
-   - mysql-utilities
-   - MySQL-python
-  become: yes
-  become_method: sudo
+#- name: Install Mysql package
+  #yum: name={{ item }} state=installed
+  #with_items:
+  # - http://dev.mysql.com/get/mysql-community-release-el7-5.noarch.rpm 
+  # - mysql-community-server
+  # - mysql-community-client
+  # - mysql-connector-python
+  # - mysql-utilities
+  # - MySQL-python
+  #become: yes
+  #become_method: sudo
 
 - name: Start Mysql Service
   service: name=mysqld state=started enabled=yes
@@ -121,7 +121,7 @@
     src=master/my.cnf.j2
     dest=/etc/my.cnf
   run_once: true
-  delegate_to: "{{ mdsdb1_ip }}"
+  delegate_to: "{{ sshmdsdb1_ip }}"
   become: yes
   become_method: sudo
 
@@ -130,7 +130,7 @@
     src=slave/my.cnf.j2
     dest=/etc/my.cnf
   run_once: true
-  delegate_to: "{{ mdsdb2_ip }}"
+  delegate_to: "{{ sshmdsdb2_ip }}"
   become: yes
   become_method: sudo
 
@@ -148,7 +148,7 @@
   shell:
       mysqlreplicate --master={{ replmgmtuser }}:'{{ replmgmtpaswd }}'@{{ mdsdb1_ip }}:3306 --slave={{ replmgmtuser }}:'{{ replmgmtpaswd }}'@{{ mdsdb2_ip }}:3306 --rpl-user={{ rpluser }}:{{ rplpass }}
   run_once: true
-  delegate_to: "{{ mdsdb1_ip }}"
+  delegate_to: "{{ sshmdsdb1_ip }}"
 
 
 - name: Create DB for activemq
@@ -158,7 +158,7 @@
     name=activemq
     state=present
   run_once: true
-  delegate_to: "{{ mdsdb1_ip }}"
+  delegate_to: "{{ sshmdsdb1_ip }}"
 
 
 ####### KEEPALIVED Configuration ##############
