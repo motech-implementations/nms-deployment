@@ -1,5 +1,10 @@
 ---
 
+- name: Change Tomcat Ownership to Grameen
+  file: path={{ ansible_env.CATALINA_HOME }} owner=grameen recurse=yes
+  become: yes
+  become_method: sudo
+
 - name: Stop Tomcat
   shell:
     "nohup {{ ansible_env.CATALINA_HOME }}/bin/catalina.sh stop &"

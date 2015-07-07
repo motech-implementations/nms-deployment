@@ -1,15 +1,15 @@
 ---
 # variable for webserver
 motech_version: motech-platform-server.war
-nms_appname: [ 'api','csv','flw','kilkari','props','imi','mobile-academy','region' ]
-nms_appversion: [ '0.1-SNAPSHOT','0.1-SNAPSHOT','0.1-SNAPSHOT' ,'0.1-SNAPSHOT' ,'0.1-SNAPSHOT' ,'0.1-SNAPSHOT' ,'0.1-SNAPSHOT' ,'0.1-SNAPSHOT'  ]
+nms_appname: [ 'api','csv','flw','kilkari','props','imi','mobile-academy','region','mtraining','alerts' ]
+nms_appversion: [ '0.1-SNAPSHOT','0.1-SNAPSHOT','0.1-SNAPSHOT' ,'0.1-SNAPSHOT' ,'0.1-SNAPSHOT' ,'0.1-SNAPSHOT' ,'0.1-SNAPSHOT' ,'0.1-SNAPSHOT','0.27-SNAPSHOT','0.27-SNAPSHOT'  ]
 tomcat_port: 8080
 tomcat_shutdown_port: 8005
 tomcat_ajp_port: 8009
 tomcat_redirect_port: 8443
 tomcat_connection_timeout: 20000
 tomcat_users: [
-  { name: 'tomcat', password: 'tomcat', roles: 'tomcat,admin-gui,manager-gui'}
+  { name: 'tomcat', password: 'tomcat', roles: 'tomcat,admin-gui,manager-gui,manager-script,manager-jmx,manager-status'}
  ]
 
 
