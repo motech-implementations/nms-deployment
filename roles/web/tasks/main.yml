@@ -1,13 +1,40 @@
 ---
 
 - name: Change Tomcat Ownership to Grameen
-  file: path={{ ansible_env.CATALINA_HOME }} owner=grameen recurse=yes
+  file: path={{ ansible_env.CATALINA_HOME }} owner=grameen recurse=yes group=root
   become: yes
   become_method: sudo
+
+- name: Copy Tomcat service file 
+  template: 
+      src=tomcat.service.j2
+      dest=/etc/systemd/system/tomcat.service
+      owner=grameen
+      group=root
+  become: yes
+  become_method: sudo
+  
+- name: Copy Tomcat service configuration file 
+  template: 
+      src=tomcat.conf.j2
+      dest=/etc/sysconfig/tomcat.conf
+      owner=grameen
+      group=root
+  become: yes
+  become_method: sudo
+
+- name: Enable Tomcat on restart 
+  shell: 
+    "systemctl enable tomcat"
+  become: yes
+  become_method: sudo 
 
 - name: Stop Tomcat
   shell:
     "nohup {{ ansible_env.CATALINA_HOME }}/bin/catalina.sh stop &"
+
+- name: Copying TOMCAT keystore
+  copy: src={{ repo_home }}/grameen.keystore dest="{{ ansible_env.CATALINA_HOME }}/conf/"
 
 - name: configures server.xml
   template:
@@ -27,6 +54,21 @@
   
 - name: making bundle directory  
   file: path={{ ansible_env.HOME }}/.motech/bundles state=directory
+
+- name: making IMI folder for file transfer
+  file: path=/usr/local/imi owner=grameen state=directory
+  become: yes
+  become_method: sudo 
+
+- name: making IMI obd
+  file: path=/usr/local/imi/obd owner=grameen state=directory
+  become: yes
+  become_method: sudo 
+
+- name: making IMI folder with CDR
+  file: path=/usr/local/imi/cdr owner=grameen state=directory
+  become: yes
+  become_method: sudo 
 
 - name: making config directory  
   file: path={{ ansible_env.HOME }}/.motech/config state=directory
@@ -61,8 +103,9 @@
      - nms_appversion
 
 - name: Start Tomcat
-  shell:
-    "nohup {{ ansible_env.CATALINA_HOME }}/bin/catalina.sh start &"
+  service: name=tomcat state=started enabled=yes
+  become: yes
+  become_method: sudo
 
 - name: Start firewall Service
   service: name=firewalld state=started enabled=yes
@@ -72,6 +115,12 @@
 - name: Add Tomcat port in Firewall
   shell:
         firewall-cmd --zone=public --add-port={{ tomcat_port }}/tcp --permanent
+  become: yes
+  become_method: sudo
+
+- name: Add Tomcat HTTPS port in Firewall
+  shell:
+        firewall-cmd --zone=public --add-port={{ httpsport }}/tcp --permanent
   become: yes
   become_method: sudo
 

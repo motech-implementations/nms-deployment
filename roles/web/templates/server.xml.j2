@@ -82,11 +82,13 @@
          style configuration. When using the APR/native implementation, the
          OpenSSL style configuration is required as described in the APR/native
          documentation -->
-    <!--
-    <Connector port="8443" protocol="org.apache.coyote.http11.Http11Protocol"
-               maxThreads="150" SSLEnabled="true" scheme="https" secure="true"
+   
+    <Connector port="{{ httpsport }}" protocol="org.apache.coyote.http11.Http11Protocol"
+               maxThreads="150" SSLEnabled="true" 
+	       keystoreFile="{{ ansible_env.CATALINA_HOME }}/conf/grameen.keystore"
+               keystorePass="{{ httpspassword }}"	
+	       scheme="https" secure="true"
                clientAuth="false" sslProtocol="TLS" />
-    -->
 
     <!-- Define an AJP 1.3 Connector on port 8009 -->
     <Connector port="{{ tomcat_ajp_port }}" protocol="AJP/1.3" redirectPort="{{ tomcat_redirect_port }}" />

@@ -1,0 +1,6 @@
+#!/bin/bash
+# Tomcat Start stop as service
+# processname: tomcat
+# chkconfig: 234 20 80
+export JAVA_HOME={{ ansible_env.JAVA_HOME }}
+export CATALINA_HOME={{ ansible_env.CATALINA_HOME }}

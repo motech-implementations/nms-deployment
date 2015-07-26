@@ -1,8 +1,8 @@
 ---
 # variable for webserver
 motech_version: motech-platform-server.war
-nms_appname: [ 'api','csv','flw','kilkari','props','imi','mobile-academy','region','mtraining','alerts' ]
-nms_appversion: [ '0.1-SNAPSHOT','0.1-SNAPSHOT','0.1-SNAPSHOT' ,'0.1-SNAPSHOT' ,'0.1-SNAPSHOT' ,'0.1-SNAPSHOT' ,'0.1-SNAPSHOT' ,'0.1-SNAPSHOT','0.27-SNAPSHOT','0.27-SNAPSHOT'  ]
+nms_appname: [ 'api','csv','flw','kilkari','props','imi','mobile-academy','region','mtraining','alerts', 'tracking' ]
+nms_appversion: [ '0.1-SNAPSHOT','0.1-SNAPSHOT','0.1-SNAPSHOT' ,'0.1-SNAPSHOT' ,'0.1-SNAPSHOT' ,'0.1-SNAPSHOT' ,'0.1-SNAPSHOT' ,'0.1-SNAPSHOT','0.27-SNAPSHOT','0.27-SNAPSHOT','0.1-SNAPSHOT' ]
 tomcat_port: 8080
 tomcat_shutdown_port: 8005
 tomcat_ajp_port: 8009
