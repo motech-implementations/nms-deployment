@@ -1,0 +1,55 @@
+- name: Copy keepalived.conf
+  template:
+     src=master/keepalived.conf.j2
+     dest=/etc/keepalived/keepalived.conf
+  run_once: true
+  delegate_to: "{{ sshmdsdb1_ip }}"
+  become: yes
+  become_method: sudo
+
+- name: Copy keepalived.conf
+  template:
+     src=slave/keepalived.conf.j2
+     dest=/etc/keepalived/keepalived.conf
+  run_once: true
+  delegate_to: "{{ sshmdsdb2_ip }}"
+  become: yes
+  become_method: sudo
+
+- name: Copy keepalived Track Script
+  template:
+     src=keepalived_check.sh.j2
+     dest=/usr/local/sbin/keepalived_check.sh
+     mode=777
+  become: yes
+  become_method: sudo
+
+- name: Start keepalived Service
+  service: name=keepalived state=restarted enabled=yes
+  become: yes
+  become_method: sudo
+
+- name: Copy Mysql Master Notify script
+  template:
+     src=mysql_master.sh.j2
+     dest=/usr/local/sbin/mysql_master.sh
+     mode=777
+  become: yes
+  become_method: sudo
+
+- name: Copy Mysql Backup Notify script
+  template:
+     src=mysql_backup.sh.j2
+     dest=/usr/local/sbin/mysql_backup.sh
+     mode=777
+  become: yes
+  become_method: sudo
+
+- name: Copy Mysql Fault script
+  template:
+      src=track.sh.j2
+      dest=/usr/local/sbin/track.sh
+      mode=777
+  become: yes
+  become_method: sudo
+

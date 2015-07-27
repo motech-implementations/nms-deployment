@@ -1,0 +1,19 @@
+#MOTECH bootstrap properties.
+#Mon Apr 06 08:11:19 EDT 2015
+config.source=FILE
+sql.user={{ appdbuser }}
+jms.broker.url={{ jms_url }}
+jms.password=
+jms.queue.for.events=QueueForEvents
+sql.password={{ appdbpassword }}
+jms.concurrentConsumers=1
+sql.driver=com.mysql.jdbc.Driver
+jms.session.cache.size=10
+jms.maxConcurrentConsumers=10
+motech.message.redelivery.delay=1
+motech.message.max.redelivery.count=3
+jms.cache.producers=false
+tenant.id=DEFAULT
+sql.url={{ mysql_url }}
+jms.queue.for.scheduler=QueueForScheduler
+jms.username=

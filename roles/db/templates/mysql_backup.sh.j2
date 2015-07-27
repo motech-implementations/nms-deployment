@@ -1,0 +1,31 @@
+export MYSQL_HOME=/usr/
+export PATH=$MYSQL_HOME/bin:$PATH
+mysql="$MYSQL_HOME/bin/mysql"
+
+host=`hostname`
+echo "============================================" >> "{{ mds_log }}"
+date >> "{{ mds_log }}"
+echo $host >> "{{ mds_log }}"
+
+if [ "$host" = ""{{ mdsdb1_hostname }}"" ];
+then
+  slave_host="{{ mdsdb1_ip }}"
+  master_host="{{ mdsdb2_ip }}"
+else
+  slave_host="{{ mdsdb2_ip }}"
+  master_host="{{ mdsdb1_ip }}"
+fi
+
+echo $slave_host >>  "{{ mds_log }}"
+
+echo $master_host >>  "{{ mds_log }}"
+
+echo $host "I am entering backup" >> "{{ mds_log }}"
+
+$mysql -p{{ rootpassword }} -u root -e "SET GLOBAL read_only=true;"
+echo "Setting Global variable status = " $? >> "{{ mds_log }}"
+
+mysqlreplicate --master={{ replmgmtuser }}:'{{ replmgmtpaswd }}'@$master_host:3306 --slave={{ replmgmtuser }}:'{{ replmgmtpaswd }}'@$slave_host:3306 --rpl-user={{ rpluser }}:{{ rplpass }} >>"{{ mds_log }}"
+#mysqlreplicate --master=root@'$master_host':3306 --slave=root@'$slave_host':3306 >> "{{ mds_log }}"
+echo "Replicate status = " $? >> "{{ mds_log }}"
+exit 0

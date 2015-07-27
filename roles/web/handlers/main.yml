@@ -1,0 +1,9 @@
+---
+
+- name: stop tomcat
+  shell:
+    "nohup {{tomcat_dir}}/bin/catalina.sh stop &"
+- name: start tomcat
+  shell:
+    "nohup {{tomcat_dir}}/bin/catalina.sh start &"
+

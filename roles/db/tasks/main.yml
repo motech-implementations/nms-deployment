@@ -1,0 +1,177 @@
+---
+# This playbook will install mysql and create db user and give permissions.
+
+#- name: Install Mysql package
+  #yum: name={{ item }} state=installed
+  #with_items:
+  # - http://dev.mysql.com/get/mysql-community-release-el7-5.noarch.rpm 
+  # - mysql-community-server
+  # - mysql-community-client
+  # - mysql-connector-python
+  # - mysql-utilities
+  # - MySQL-python
+  #become: yes
+  #become_method: sudo
+
+- name: Start Mysql Service
+  service: name=mysqld state=started enabled=yes
+  become: yes
+  become_method: sudo
+
+- name: Start firewall Service
+  service: name=firewalld state=started enabled=yes
+  become: yes
+  become_method: sudo
+
+- name: Add firewall rule
+  shell: 
+         firewall-cmd --zone=public --add-port={{ item }}/tcp --permanent
+  with_items:
+   - 3306
+   - 61616
+  become: yes
+  become_method: sudo
+
+#- name: Add firewall rule
+#  shell:
+#        firewall-cmd --zone=public --add-port=61616/tcp --permanent
+#  become: yes
+#  become_method: sudo
+
+- name : Add keepalived IP address as INPUT
+  shell:
+        firewall-cmd --direct --permanent --add-rule ipv4 filter INPUT 0 --destination 224.0.0.18 --protocol vrrp -j ACCEPT
+  with_items:
+   - INPUT
+   - OUTPUT
+  become: yes
+  become_method: sudo
+
+
+#- name : Add keepalived IP address as OUTPUT
+#  shell:
+#        firewall-cmd --direct --permanent --add-rule ipv4 filter OUTPUT 0 --destination 224.0.0.18 --protocol vrrp -j ACCEPT
+#  become: yes
+#  become_method: sudo
+
+- name: Reload firewall 
+  shell:
+        firewall-cmd --complete-reload
+  become: yes
+  become_method: sudo
+
+
+
+- name: Set root user password
+  shell:
+      mysqladmin -u root password '{{ rootpassword }}'
+  ignore_errors: yes
+
+- name: Set root user password
+  mysql_user:
+    login_user=root
+    login_password={{ rootpassword }}
+    name=root
+    password={{ rootpassword }}
+    host={{ item }}
+  with_items:
+    - localhost
+    - ::1
+    - "{{ ansible_hostname }}"
+
+- name: Delete anonymous user
+  mysql_user:
+    login_user=root
+    login_password={{ rootpassword }}
+    name=''
+    host={{ item }}
+    state=absent
+  with_items:
+    - localhost
+    - "{{ ansible_hostname }}"
+
+- name: Create Application DB User
+  mysql_user: 
+    login_user=root
+    login_password={{ rootpassword }}
+    login_host=localhost
+    name={{ appdbuser }} 
+    password={{ appdbpassword }} 
+    priv=*.*:ALL 
+    host='%' 
+    state=present
+
+- name: Create DB Replication manager user
+  mysql_user:
+    login_user=root
+    login_password={{ rootpassword }}
+    login_host=localhost
+    name={{ replmgmtuser }}
+    password={{ replmgmtpaswd }}
+    priv=*.*:ALL,GRANT
+    host='%' 
+    state=present
+ 
+- name: Revoke SUPER privileges from application user
+  shell:
+     mysql -p{{ rootpassword }} -u root -e "revoke super on *.* from '{{ appdbuser }}'@'%'";
+
+- name: Copy my.cnf
+  template:
+    src=master/my.cnf.j2
+    dest=/etc/my.cnf
+  run_once: true
+  delegate_to: "{{ sshmdsdb1_ip }}"
+  become: yes
+  become_method: sudo
+
+- name: Copy my.cnf
+  template:
+    src=slave/my.cnf.j2
+    dest=/etc/my.cnf
+  run_once: true
+  delegate_to: "{{ sshmdsdb2_ip }}"
+  become: yes
+  become_method: sudo
+
+- name: Stop keepalived Service
+  service: name=keepalived state=stopped enabled=yes
+  become: yes
+  become_method: sudo
+
+- name: re-Start mysql Service
+  service: name=mysql state=restarted enabled=yes
+  become: yes
+  become_method: sudo
+
+- name: Start replication
+  shell:
+      mysqlreplicate --master={{ replmgmtuser }}:'{{ replmgmtpaswd }}'@{{ mdsdb1_ip }}:3306 --slave={{ replmgmtuser }}:'{{ replmgmtpaswd }}'@{{ mdsdb2_ip }}:3306 --rpl-user={{ rpluser }}:{{ rplpass }}
+  run_once: true
+  delegate_to: "{{ sshmdsdb1_ip }}"
+
+
+- name: Create DB for activemq
+  mysql_db:
+    login_user={{ appdbuser }}
+    login_password={{ appdbpassword }}
+    name=activemq
+    state=present
+  run_once: true
+  delegate_to: "{{ sshmdsdb1_ip }}"
+
+
+####### KEEPALIVED Configuration ##############
+
+#- name: Copy keepalived.conf
+#  serial: 1
+#  include: keepalived.yml
+  
+ 
+############ ActiveMQ Configuration#####################
+
+#- name: configure and deploy activemq 
+#  serial: 1
+#  include: activemq.yml
+
+

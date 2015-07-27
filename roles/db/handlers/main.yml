@@ -1,0 +1,11 @@
+---
+# Handler to handle DB tier notifications
+
+- name: restart mysql
+  service: name=mysqld state=restarted
+
+- name: reload firewalld
+  service: name=firewalld state=reloaded
+
+- name: restart keepalived
+  service: name=keepalived state=restarted
