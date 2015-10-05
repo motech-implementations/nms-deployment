@@ -33,8 +33,15 @@
   shell:
     "nohup {{ ansible_env.CATALINA_HOME }}/bin/catalina.sh stop &"
 
+- name: "Copying Tomcat setting script"
+  template: 
+    src=setenv.sh.j2
+    dest={{ ansible_env.CATALINA_HOME }}/bin/setenv.sh
+    owner=grameen
+    mode=0777
+     
 - name: Copying TOMCAT keystore
-  copy: src={{ repo_home }}/grameen.keystore dest="{{ ansible_env.CATALINA_HOME }}/conf/"
+  copy: src={{ repo_home }}/wc_nationalmhealth.in_bundle.pfx dest="{{ ansible_env.CATALINA_HOME }}/conf/"
 
 - name: configures server.xml
   template:
@@ -51,9 +58,27 @@
 
 - name: Wait for Web server to Stop
   wait_for: host={{ inventory_hostname }} port=8080 state=stopped timeout=80
+
+- name: Cleaning Bundles directory
+  file: path={{ ansible_env.HOME }}/.motech/bundles state=absent
   
 - name: making bundle directory  
   file: path={{ ansible_env.HOME }}/.motech/bundles state=directory
+
+- name: making config directory  
+  file: path={{ ansible_env.HOME }}/.motech/config state=directory
+
+- name: making org.motechproject.nms.imi directory  
+  file: path={{ ansible_env.HOME }}/.motech/config/org.motechproject.nms.imi state=directory
+
+- name: making org.motechproject.nms.flw directory  
+  file: path={{ ansible_env.HOME }}/.motech/config/org.motechproject.nms.flw state=directory
+
+- name: making org.motechproject.nms.kilkari directory  
+  file: path={{ ansible_env.HOME }}/.motech/config/org.motechproject.nms.kilkari state=directory
+
+- name: making org.motechproject.nms.mobile-academy directory  
+  file: path={{ ansible_env.HOME }}/.motech/config/org.motechproject.nms.mobile-academy state=directory
 
 - name: making IMI folder for file transfer
   file: path=/usr/local/imi owner=grameen state=directory
@@ -70,9 +95,6 @@
   become: yes
   become_method: sudo 
 
-- name: making config directory  
-  file: path={{ ansible_env.HOME }}/.motech/config state=directory
-
 - name: Copying the bootstrap configuration file
   template: 
     src="bootstrap.properties.j2"
@@ -83,6 +105,24 @@
     src="log4j.properties.j2"
     dest="{{ ansible_env.HOME }}/.motech/config/log4j.properties"
 
+- name: Copying IMI configuration file
+  template:
+    src="imi.properties.j2"
+    dest="{{ ansible_env.HOME }}/.motech/config/org.motechproject.nms.imi/imi.properties"
+    owner=grameen
+
+#- name: Copying Kilkari configuration file
+#  template:
+#    src="kilkari.properties.j2"
+#    dest="{{ ansible_env.HOME }}/.motech/config/org.motechproject.nms.kilkari/kilkari.properties"
+#    owner=grameen
+
+#- name: Copying FLW configuration file
+#  template:
+#    src="flw.properties.j2"
+#    dest="{{ ansible_env.HOME }}/.motech/config/org.motechproject.nms.flw/flw.properties"
+#    owner=grameen
+
 - name: Copying the motech-settings.properties configuration file
   template: 
     src="motech-settings.properties.j2"
@@ -91,16 +131,9 @@
 - name: Copying MOTECH WAR file
   copy: src={{ repo_home }}MOTECH/{{ motech_version }} dest={{ ansible_env.CATALINA_HOME }}/webapps/
 
-- name: Deleting the old files
-  file: path={{ ansible_env.HOME }}/.motech/bundles/{{ item.0 }}-{{ item.1 }}.jar state=absent
-  with_together:
-     - nms_appname 
-     - nms_appversion
+
 - name: Copying the Application JAR files as mentioned in Variable Array
-  copy: src={{ repo_home }}NMS/{{ item.0 }}-{{ item.1 }}.jar dest={{ ansible_env.HOME }}/.motech/bundles/
-  with_together:
-     - nms_appname 
-     - nms_appversion
+  copy: src=/opt/repo/NMS/ dest={{ ansible_env.HOME }}/.motech/bundles/
 
 - name: Start Tomcat
   service: name=tomcat state=started enabled=yes

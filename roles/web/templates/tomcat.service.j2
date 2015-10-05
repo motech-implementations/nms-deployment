@@ -4,7 +4,6 @@ After=network.target
 [Service]
 Type=forking
 User=grameen
-EnvironmentFile=/etc/sysconfig/tomcat.conf
 WorkingDirectory={{ ansible_env.CATALINA_HOME }}
 ExecStart={{ ansible_env.CATALINA_HOME }}/bin/catalina.sh start
 ExecStop={{ ansible_env.CATALINA_HOME }}/bin/catalina.sh stop
