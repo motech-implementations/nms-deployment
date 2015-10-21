@@ -11,7 +11,7 @@ curl_setopt($ch, CURLOPT_URL,"http://192.168.200.1:8080/motech-platform-server/m
 if( ! $Buff=curl_exec($ch))
 {
 	echo "Error in Execution of Command";
-	$Status=1;
+	$Status=2;
 }
 
 $reqInfo = curl_getinfo($ch);
@@ -28,7 +28,7 @@ if ($errnum){
 if ( $Buff > 0)
 {
         echo "There are $Buff New Alerts";
-        $Status=1;
+        $Status=2;
 }
 
 
