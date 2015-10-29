@@ -1,0 +1,124 @@
+###############################################################################
+# LOCALHOST.CFG - SAMPLE OBJECT CONFIG FILE FOR MONITORING THIS MACHINE
+#
+#
+# NOTE: This config file is intended to serve as an *extremely* simple 
+#       example of how you can create configuration entries to monitor
+#       the local (Linux) machine.
+#
+###############################################################################
+
+
+
+
+###############################################################################
+###############################################################################
+#
+# HOST DEFINITION
+#
+###############################################################################
+###############################################################################
+
+# Define a host for the local machine
+
+
+
+###############################################################################
+###############################################################################
+#
+# HOST GROUP DEFINITION
+#
+###############################################################################
+###############################################################################
+
+# Define an optional hostgroup for Linux machines
+
+define hostgroup{
+        hostgroup_name  MOTECH_Web_Servers ; The name of the hostgroup
+        alias           MOTECH_Web_Servers ; Long name of the group
+        members         motech-web-1,motech-web-2,motech-web-3     ; Comma separated list of hosts that belong to this group
+        }
+
+###############################################################################
+###############################################################################
+#
+# SERVICE DEFINITIONS
+#
+###############################################################################
+###############################################################################
+
+
+# Define a service to "ping" the local machine
+
+# Disable notifications for this service by default, as not all users may have SSH enabled.
+
+define service {
+        use				generic-service
+	hostgroup_name		        MOTECH_Web_Servers
+        service_description             CHECK USER
+        check_command                   check_nrpe_arg_2!check_users!5!10
+        }
+
+define service {
+        use                             generic-service
+        hostgroup_name                  MOTECH_Web_Servers
+        service_description             CHECK DISK
+        check_command                   check_nrpe_arg_3!check_disk!10%!10%!/
+	}
+
+define service {
+        use                             generic-service
+        hostgroup_name                  MOTECH_Web_Servers
+        service_description             CHECK SSH
+        check_command                   check_nrpe_arg_2!check_ssh!1027!192.168.200.4
+        }
+
+define service {
+        use                             generic-service
+        hostgroup_name                  MOTECH_Web_Servers
+        service_description             CHECK TOMCAT STATUS
+        check_command                   check_nrpe_arg_5!check_tomcat_status!8080!tomcat!tomcat!'/manager'!status
+        }
+
+define service {
+        use                             generic-service
+        hostgroup_name                  MOTECH_Web_Servers
+        service_description             CHECK TOMCAT MEMORY
+        check_command                   check_nrpe_arg_7!check_tomcat_memory!8080!tomcat!tomcat!'/manager'!status!30!30
+        }
+
+define service {
+        use                             generic-service
+        hostgroup_name                  MOTECH_Web_Servers
+        service_description             CHECK LOAD
+        check_command                   check_nrpe_arg_2!check_load!15,10,5!30,25,20
+        }
+
+define service {
+        use                             generic-service
+        hostgroup_name                  MOTECH_Web_Servers
+        service_description             CHECK TOTAL PROCS
+        check_command                   check_nrpe_arg_2!check_total_procs!500!500
+        }
+
+define service {
+        use                             generic-service
+        hostgroup_name                  MOTECH_Web_Servers
+        service_description             CHECK Zombie PROCS
+        check_command                   check_nrpe_arg_3!check_zombie_procs!5!10!z
+        }
+
+define service {
+        use                             generic-service
+        hostgroup_name                  MOTECH_Web_Servers
+        service_description             CHECK SWAP
+        check_command                   check_nrpe_arg_2!check_swap!10!10
+        }
+
+define service {
+        use                             generic-service
+        hostgroup_name                  MOTECH_Web_Servers
+        service_description             CHECK URL API
+        check_command                   check_nrpe!check_url_kilkari_api
+        }
+
