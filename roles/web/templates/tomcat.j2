@@ -1,0 +1,7 @@
+{{ ansible_env.CATALINA_HOME }}/logs/catalina.out  {
+	copytruncate
+	daily
+	rotate 30
+	compress
+	missingok
+}
