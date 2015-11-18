@@ -1,0 +1,127 @@
+---
+
+- name: Change Tomcat Ownership to user
+  file: path={{ ansible_env.CATALINA_HOME }} owner={{ ansible_ssh_user }} recurse=yes group=root
+  become: yes
+  become_method: sudo
+
+- name: Copy the Log Rotate configuration
+  template:
+    src=tomcat.j2
+    dest=/etc/logrotate.d/tomcat
+  become: yes
+  become_method: sudo
+
+- name: Giving Permissions to CATALINA_HOME 
+  file: path=$CATALINA_HOME
+        state=directory 
+        mode="u=rwx,g=rx,u=rx" 
+        recurse=yes
+  become: yes
+  become_method: sudo 
+
+- name: Copy the Log Rotate configuration
+  template:
+    src=hosts.j2
+    dest=/etc/hosts
+    mode="u=rw,g=r,u=r"
+    group=root
+  become: yes
+  become_method: sudo
+  
+- name: Copy host file
+  template:
+    src=hosts.j2
+    dest=/etc/hosts
+    mode="u=rw,g=r,u=r"
+    group=root
+  become: yes
+  become_method: sudo
+  
+- name: making .motech directory in user home
+  file: path={{ ansible_env.HOME }}/.motech state=directory
+  
+- name: making bundle directory  
+  file: path={{ ansible_env.HOME }}/.motech/bundles state=directory
+  
+- name: making config directory  
+  file: path={{ ansible_env.HOME }}/.motech/config state=directory
+
+- name: making org.motechproject.nms.imi directory  
+  file: path={{ ansible_env.HOME }}/.motech/config/org.motechproject.nms.imi state=directory
+  
+- name: making org.motechproject.nms.imi/raw directory  
+  file: path={{ ansible_env.HOME }}/.motech/config/org.motechproject.nms.imi/raw state=directory
+
+- name: making org.motechproject.nms.flw directory  
+  file: path={{ ansible_env.HOME }}/.motech/config/org.motechproject.nms.flw state=directory
+
+- name: making org.motechproject.nms.kilkari directory  
+  file: path={{ ansible_env.HOME }}/.motech/config/org.motechproject.nms.kilkari state=directory
+
+- name: making org.motechproject.nms.mobile-academy directory  
+  file: path={{ ansible_env.HOME }}/.motech/config/org.motechproject.nms.mobile-academy state=directory
+
+
+- name: making raw org.motechproject.nms.mobile-academy directory  
+  file: path={{ ansible_env.HOME }}/.motech/config/org.motechproject.nms.mobile-academy/raw state=directory
+
+- name: making IMI folder for file transfer
+  file: path=/usr/local/imi owner={{ ansible_ssh_user }} state=directory
+  become: yes
+  become_method: sudo 
+
+- name: making IMI obd
+  file: path=/usr/local/imi/obd owner={{ ansible_ssh_user }} state=directory
+  become: yes
+  become_method: sudo 
+
+- name: making IMI folder with CDR
+  file: path=/usr/local/imi/cdr owner={{ ansible_ssh_user }} state=directory
+  become: yes
+  become_method: sudo
+
+- name: Copying the bootstrap configuration file
+  template: 
+    src="bootstrap.properties.j2"
+    dest="{{ ansible_env.HOME }}/.motech/config/bootstrap.properties" 
+
+- name: Copying Log4j configuration files
+  template:
+    src="log4j.properties.j2"
+    dest="{{ ansible_env.HOME }}/.motech/config/log4j.properties"
+
+- name: Copying IMI  properties file
+  template:
+    src="imi.properties.j2"
+    dest="{{ ansible_env.HOME }}/.motech/config/org.motechproject.nms.imi/imi.properties"
+
+- name: Copying IMI  SMS  JSON configuration file
+  template:
+    src="smsTemplate.json.j2"
+    dest="{{ ansible_env.HOME }}/.motech/config/org.motechproject.nms.imi/raw/smsTemplate.json"
+
+- name: Copying Kilkari configuration file
+  template:
+    src="kilkari.properties.j2"
+    dest="{{ ansible_env.HOME }}/.motech/config/org.motechproject.nms.kilkari/kilkari.properties"
+
+- name: Copying FLW configuration file
+  template:
+    src="flw.properties.j2"
+    dest="{{ ansible_env.HOME }}/.motech/config/org.motechproject.nms.flw/flw.properties"
+
+- name: Copying MOBILE ACADEMY configuration file
+  template:
+    src="mobile-academy.properties.j2"
+    dest="{{ ansible_env.HOME }}/.motech/config/org.motechproject.nms.mobile-academy/mobile-academy.properties"
+
+- name: Copying  MOBILE ACADEMY SMS PROPERTIES  
+  template:
+    src="sms-content.properties.j2"
+    dest="{{ ansible_env.HOME }}/.motech/config/org.motechproject.nms.mobile-academy/sms-content.properties"
+
+- name: Copying MOBILE ACADEMY NMS COURSE
+  template:
+    src="nmsCourse.json.j2"
+    dest="{{ ansible_env.HOME }}/.motech/config/org.motechproject.nms.mobile-academy/raw/nmsCourse.json"
