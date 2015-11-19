@@ -1,24 +1,19 @@
 ---
 
-- name: Change Tomcat Ownership to Grameen
-  file: path={{ ansible_env.CATALINA_HOME }} owner=grameen recurse=yes group=root
-  become: yes
-  become_method: sudo
-
 - name: Copy Tomcat service file 
   template: 
       src=tomcat.service.j2
       dest=/etc/systemd/system/tomcat.service
-      owner=grameen
+      owner={{ ansible_ssh_user }}
       group=root
   become: yes
   become_method: sudo
-  
+
 - name: Copy Tomcat service configuration file 
   template: 
       src=tomcat.conf.j2
       dest=/etc/sysconfig/tomcat.conf
-      owner=grameen
+      owner={{ ansible_ssh_user }}
       group=root
   become: yes
   become_method: sudo
@@ -28,18 +23,18 @@
     "systemctl enable tomcat"
   become: yes
   become_method: sudo 
-
+  
 - name: Stop Tomcat
   shell:
-    "nohup {{ ansible_env.CATALINA_HOME }}/bin/catalina.sh stop &"
+    "nohup {{ ansible_env.CATALINA_HOME }}/bin/catalina.sh stop &"  
 
 - name: "Copying Tomcat setting script"
   template: 
     src=setenv.sh.j2
     dest={{ ansible_env.CATALINA_HOME }}/bin/setenv.sh
-    owner=grameen
+    owner={{ ansible_ssh_user }}
     mode=0777
-     
+
 - name: Copying TOMCAT keystore
   copy: src={{ repo_home }}/wc_nationalmhealth.in_bundle.pfx dest="{{ ansible_env.CATALINA_HOME }}/conf/"
 
@@ -47,82 +42,21 @@
   template:
     src=server.xml.j2
     dest="{{ ansible_env.CATALINA_HOME }}/conf/server.xml"
-  
+
 - name: configures tomcat-users.xml
   template:
     src="tomcat-users.xml.j2"
     dest="{{ ansible_env.CATALINA_HOME }}/conf/tomcat-users.xml"
-
-- name: making .motech directory in user home
-  file: path={{ ansible_env.HOME }}/.motech state=directory
 
 - name: Wait for Web server to Stop
   wait_for: host={{ inventory_hostname }} port=8080 state=stopped timeout=80
 
 - name: Cleaning Bundles directory
   file: path={{ ansible_env.HOME }}/.motech/bundles state=absent
-  
-- name: making bundle directory  
-  file: path={{ ansible_env.HOME }}/.motech/bundles state=directory
 
 - name: making config directory  
   file: path={{ ansible_env.HOME }}/.motech/config state=directory
-
-- name: making org.motechproject.nms.imi directory  
-  file: path={{ ansible_env.HOME }}/.motech/config/org.motechproject.nms.imi state=directory
-
-- name: making org.motechproject.nms.flw directory  
-  file: path={{ ansible_env.HOME }}/.motech/config/org.motechproject.nms.flw state=directory
-
-- name: making org.motechproject.nms.kilkari directory  
-  file: path={{ ansible_env.HOME }}/.motech/config/org.motechproject.nms.kilkari state=directory
-
-- name: making org.motechproject.nms.mobile-academy directory  
-  file: path={{ ansible_env.HOME }}/.motech/config/org.motechproject.nms.mobile-academy state=directory
-
-- name: making IMI folder for file transfer
-  file: path=/usr/local/imi owner=grameen state=directory
-  become: yes
-  become_method: sudo 
-
-- name: making IMI obd
-  file: path=/usr/local/imi/obd owner=grameen state=directory
-  become: yes
-  become_method: sudo 
-
-- name: making IMI folder with CDR
-  file: path=/usr/local/imi/cdr owner=grameen state=directory
-  become: yes
-  become_method: sudo 
-
-- name: Copying the bootstrap configuration file
-  template: 
-    src="bootstrap.properties.j2"
-    dest="{{ ansible_env.HOME }}/.motech/config/bootstrap.properties"
-
-- name: Copying Log4j configuration files
-  template:
-    src="log4j.properties.j2"
-    dest="{{ ansible_env.HOME }}/.motech/config/log4j.properties"
-
-- name: Copying IMI configuration file
-  template:
-    src="imi.properties.j2"
-    dest="{{ ansible_env.HOME }}/.motech/config/org.motechproject.nms.imi/imi.properties"
-    owner=grameen
-
-#- name: Copying Kilkari configuration file
-#  template:
-#    src="kilkari.properties.j2"
-#    dest="{{ ansible_env.HOME }}/.motech/config/org.motechproject.nms.kilkari/kilkari.properties"
-#    owner=grameen
-
-#- name: Copying FLW configuration file
-#  template:
-#    src="flw.properties.j2"
-#    dest="{{ ansible_env.HOME }}/.motech/config/org.motechproject.nms.flw/flw.properties"
-#    owner=grameen
-
+  
 - name: Copying the motech-settings.properties configuration file
   template: 
     src="motech-settings.properties.j2"

@@ -1,14 +1,22 @@
 ---
 # This playbook deploys the whole application stack in this site.  
 
-
-- name: configure and deploy the webservers and application code
+- name: configure motech webservers 
   hosts: webservers
   remote_user: grameen
-  roles:
-    - web
+  tasks:
+    - include: roles/web/tasks/webconfig.yml
   tags:
-    - web
+    - webconfig
+
+- name: Deploy the Motech application and configuration
+  hosts: webservers
+  remote_user: grameen
+  tasks:
+    - include: roles/web/tasks/webconfig.yml
+    - include: roles/web/tasks/main.yml
+  tags:
+    - motechdeploy
 
 - name: configure and deploy the dbserver and application code
   hosts: dbservers
@@ -18,6 +26,13 @@
   tags:
     - db
 
+- name: configure and deploy the dbserver and application code
+  hosts: reportdbserver 
+  remote_user: grameen
+  roles:
+    - reportdb
+  tags:
+    - reportdb
 
 - name: configure and deploy keepalived
   hosts: dbservers
