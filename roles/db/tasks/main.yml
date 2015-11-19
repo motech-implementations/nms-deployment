@@ -13,6 +13,9 @@
   #become: yes
   #become_method: sudo
 
+- name: Create mysql log directory
+  file: path=/var/log/mysql state=directory owner=mysql group=mysql
+
 - name: Start Mysql Service
   service: name=mysqld state=started enabled=yes
   become: yes
