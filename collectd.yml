@@ -1,0 +1,57 @@
+- name: install collectd
+  hosts: all
+  remote_user: grameen
+  tasks:
+    - include: roles/collectd/tasks/install.yml
+  tags:
+    - collectd
+    - collectd-server
+    - collectd-client
+
+- name: configure collectd client
+  hosts: webservers, reportwebserver, dbservers, reportdbserver
+  remote_user: grameen
+  tasks:
+    - include: roles/collects/tasks/client-config.yml
+    - include: roles/collects/tasks/common-plugins.yml
+  tags:
+    - collectd
+    - collectd-client
+
+- name: collectd webserver plugins
+  hosts: webservers, reportwebserver
+  remote_user: grameen
+  tasks:
+    - include: roles/collects/tasks/webserver-plugins.yml
+  tags:
+    - collectd
+    - collectd-client
+
+- name: collectd dbserver plugins
+  hosts: dbservers, reportdbserver
+  remote_user: grameen
+  tasks:
+    - include: roles/collects/tasks/db-plugins.yml
+  tags:
+    - collectd
+    - collectd-client
+
+- name: configure collectd server
+  hosts: health-monitor
+  remote_user: grameen
+  tasks:
+    - include: roles/collects/tasks/server-config.yml
+  tags:
+    - collectd
+    - collectd-server
+
+- name: install facette
+  hosts: health-monitor
+  remote_user: grameen
+  tasks:
+    - include: roles/collects/tasks/facette.yml
+  tags:
+    - collectd
+    - facette
+
+
