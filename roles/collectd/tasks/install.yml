@@ -19,5 +19,10 @@
        - collectd-5.5.0-2.el7.x86_64.rpm
   when: result.changed
 
+- name: install collectd conf
+  template:
+    src=roles/collectd/templates/collectd.conf.j2
+    dest=/etc/collectd.conf
+
 - name: Enable collectd to start on boot
   service: name=collectd enabled=yes

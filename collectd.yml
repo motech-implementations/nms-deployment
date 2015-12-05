@@ -11,15 +11,35 @@
     - collectd-server
     - collectd-client
 
-# - name: configure collectd client
-#   hosts: webservers, reportwebserver, dbservers, reportdbserver
-#   remote_user: grameen
-#   tasks:
-#     - include: roles/collectd/tasks/client-config.yml
-#     - include: roles/collectd/tasks/common-plugins.yml
-#   tags:
-#     - collectd
-#     - collectd-client
+- name: install common collectd plugins
+  hosts: all
+  action: copy src=roles/collectd/templates/plugins dest=/etc/collect.d
+  with_items:
+       - cpu.conf
+       - df.conf
+       - interface.conf
+       - load.conf
+       - memory.conf
+       - processes.conf
+       - swap.conf
+  tags:
+    - collectd
+    - collectd-server
+    - collectd-client
+
+- name: install client collectd plugins
+  hosts: webservers, reportwebserver, dbservers, reportdbserver
+  copy: src=roles/collectd/templates/plugins/network-client.conf dest=/etc/collect.d/network.conf
+  tags:
+    - collectd
+    - collectd-client
+
+- name: install server collectd plugins
+  hosts: health-monitor
+  copy: src=roles/collectd/templates/plugins/network-server.conf dest=/etc/collect.d/network.conf
+  tags:
+    - collectd
+    - collectd-server
 
 # - name: collectd webserver plugins
 #   hosts: webservers, reportwebserver
@@ -38,15 +58,6 @@
 #   tags:
 #     - collectd
 #     - collectd-client
-
-# - name: configure collectd server
-#   hosts: health-monitor
-#   remote_user: grameen
-#   tasks:
-#     - include: roles/collectd/tasks/server-config.yml
-#   tags:
-#     - collectd
-#     - collectd-server
 
 # - name: install facette
 #   hosts: health-monitor
