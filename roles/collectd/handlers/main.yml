@@ -1,0 +1,10 @@
+---
+- name: Restart Facette
+  service: 
+    name=facette
+    state=restarted
+
+- name: Restart Collectd
+  service: 
+    name=collectd
+    state=restarted

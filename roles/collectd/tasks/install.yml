@@ -1,28 +1,27 @@
 ---
 - name: Copy collectd rpm
   copy: src=files/collectd/collectd-5.5.0-2.el7.x86_64.rpm dest=/tmp
-  register: result
 
 - name: Copy libtool rpm
   copy: src=files/collectd/libtool-ltdl-2.4.2-20.el7.x86_64.rpm dest=/tmp
-  when: result.changed
 
 - name: Copy yajl rpm
   copy: src=files/collectd/yajl-2.0.4-4.el7.x86_64.rpm dest=/tmp
-  when: result.changed
 
 - name: install collectd rpm from local file
-  action: yum name=/tmp/{{item}} state=present
+  yum: name={{item}} state=present
   with_items:
-       - libtool-ltdl-2.4.2-20.el7.x86_64.rpm
-       - yajl-2.0.4-4.el7.x86_64.rpm
-       - collectd-5.5.0-2.el7.x86_64.rpm
-  when: result.changed
+       - /tmp/libtool-ltdl-2.4.2-20.el7.x86_64.rpm
+       - /tmp/yajl-2.0.4-4.el7.x86_64.rpm
+       - /tmp/collectd-5.5.0-2.el7.x86_64.rpm
 
 - name: install collectd conf
   template:
     src=roles/collectd/templates/collectd.conf.j2
     dest=/etc/collectd.conf
+  notify:
+    - Restart Collectd
 
 - name: Enable collectd to start on boot
   service: name=collectd enabled=yes
+

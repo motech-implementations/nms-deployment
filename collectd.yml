@@ -1,6 +1,5 @@
 - name: install collectd
   hosts: all
-  remote_user: grameen
   tasks:
     - include: roles/collectd/tasks/install.yml
       sudo: yes
@@ -10,62 +9,78 @@
     - collectd
     - collectd-server
     - collectd-client
+  handlers:
+    - include: roles/collectd/handlers/main.yml
 
-- name: install common collectd plugins
+- name: Install common collectd plugins 
   hosts: all
-  action: copy src=roles/collectd/templates/plugins dest=/etc/collect.d
-  with_items:
-       - cpu.conf
-       - df.conf
-       - interface.conf
-       - load.conf
-       - memory.conf
-       - processes.conf
-       - swap.conf
+  tasks:
+    - include: roles/collectd/tasks/common-plugins.yml
   tags:
     - collectd
     - collectd-server
     - collectd-client
+  handlers:
+    - include: roles/collectd/handlers/main.yml
 
 - name: install client collectd plugins
-  hosts: webservers, reportwebserver, dbservers, reportdbserver
-  copy: src=roles/collectd/templates/plugins/network-client.conf dest=/etc/collect.d/network.conf
+  hosts: webservers:reportwebserver:dbservers:reportdbserver
+  tasks:
+    - include: roles/collectd/tasks/client-plugins.yml
   tags:
     - collectd
     - collectd-client
+  handlers:
+    - include: roles/collectd/handlers/main.yml
 
 - name: install server collectd plugins
   hosts: health-monitor
-  copy: src=roles/collectd/templates/plugins/network-server.conf dest=/etc/collect.d/network.conf
+  tasks:
+    - include: roles/collectd/tasks/server-plugins.yml
   tags:
     - collectd
     - collectd-server
+  handlers:
+    - include: roles/collectd/handlers/main.yml
 
 # - name: collectd webserver plugins
-#   hosts: webservers, reportwebserver
-#   remote_user: grameen
+#   hosts: webservers:reportwebserver
 #   tasks:
 #     - include: roles/collectd/tasks/webserver-plugins.yml
 #   tags:
 #     - collectd
 #     - collectd-client
+#  handlers:
+#    - include: roles/collectd/handlers/main.yml
 
 # - name: collectd dbserver plugins
-#   hosts: dbservers, reportdbserver
-#   remote_user: grameen
+#   hosts: dbservers:reportdbserver
 #   tasks:
 #     - include: roles/collectd/tasks/db-plugins.yml
 #   tags:
 #     - collectd
 #     - collectd-client
+#  handlers:
+#    - include: roles/collectd/handlers/main.yml
 
-# - name: install facette
-#   hosts: health-monitor
-#   remote_user: grameen
-#   tasks:
-#     - include: roles/collectd/tasks/facette.yml
-#   tags:
-#     - collectd
-#     - facette
+- name: install epel repository
+  hosts: health-monitor
+  remote_user: root
+  roles:
+    - epel
+  tags:
+    - epel
+    - collectd
+    - collectd-server
 
-
+- name: install facette
+  hosts: health-monitor
+  tasks:
+    - include: roles/collectd/tasks/facette.yml
+      vars:
+        facette_port: 12003
+  tags:
+    - collectd
+    - facette
+  handlers:
+    - include: roles/collectd/handlers/main.yml

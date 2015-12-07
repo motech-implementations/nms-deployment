@@ -1,0 +1,7 @@
+{
+    "bind": "tcp4://0.0.0.0:{{ facette_port }}",
+    "base_dir": "/usr/local/share/facette",
+    "providers_dir": "/etc/facette/providers",
+    "data_dir": "/var/lib/facette",
+    "pid_file": "/var/run/facette/facette.pid"
+}

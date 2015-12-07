@@ -1,0 +1,12 @@
+LoadPlugin network
+<Plugin network>
+	# server setup:
+	Listen "{{ collectd_server_ip }}"
+	MaxPacketSize 1452
+
+#	# statistics about the network plugin itself
+#	ReportStats false
+
+#	# "garbage collection"
+	CacheFlush 1800
+</Plugin>

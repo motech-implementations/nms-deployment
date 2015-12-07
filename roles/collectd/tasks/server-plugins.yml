@@ -1,0 +1,20 @@
+---
+- template: 
+    src=roles/collectd/templates/plugins/network-server.conf.j2 
+    dest=/etc/collectd.d/network.conf
+  notify:
+    - Restart Collectd
+
+- action: 
+    copy src=roles/collectd/templates/plugins/{{ item }} 
+    dest=/etc/collectd.d/
+  with_items:
+    - rrdtool.conf
+  notify:
+    - Restart Collectd
+
+- yum: 
+    name=collectd-rrdtool 
+    state=latest
+  notify:
+    - Restart Collectd

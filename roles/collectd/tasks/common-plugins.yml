@@ -1,0 +1,13 @@
+---
+- action: copy src=roles/collectd/templates/plugins/{{ item }} dest=/etc/collectd.d/
+  with_items:
+    - cpu.conf
+    - df.conf
+    - disk.conf
+    - interface.conf
+    - load.conf
+    - memory.conf
+    - processes.conf
+    - swap.conf
+  notify:
+    - Restart Collectd
