@@ -9,3 +9,8 @@ GRANT USAGE ON *.* TO 'collectd'@'localhost';
 GRANT REPLICATION CLIENT ON *.* TO 'collectd'@'localhost';
 
 collectd_database_password is in group_vars/all
+
+To install collectd on all servers, connect them and install facette on the health monitor run
+
+ansible-playbook collectd.yml -i /etc/ansible/hosts.yml --ask-pass --ask-vault-pass --tags collectd
+
