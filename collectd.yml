@@ -53,15 +53,15 @@
 #  handlers:
 #    - include: roles/collectd/handlers/main.yml
 
-# - name: collectd dbserver plugins
-#   hosts: dbservers:reportdbserver
-#   tasks:
-#     - include: roles/collectd/tasks/db-plugins.yml
-#   tags:
-#     - collectd
-#     - collectd-client
-#  handlers:
-#    - include: roles/collectd/handlers/main.yml
+- name: collectd dbserver plugins
+  hosts: dbservers:reportdbserver
+  tasks:
+    - include: roles/collectd/tasks/db-plugins.yml
+  tags:
+    - collectd
+    - collectd-client
+  handlers:
+    - include: roles/collectd/handlers/main.yml
 
 - name: install epel repository
   hosts: health-monitor
