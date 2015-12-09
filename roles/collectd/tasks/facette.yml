@@ -78,9 +78,18 @@
   notify:
     - Restart Facette
 
+- name: Add Facette port in firewall
+  shell:
+        firewall-cmd --zone=public --add-port={{ facette_port }}/tcp --permanent
+  become: yes
+  become_method: sudo
+  notify:
+    - Reload firewall
+
 - name: "Make sure Facette is running and starts on boot"
   service: >
     name=facette
     state=started
     enabled=yes
     runlevel=5
+

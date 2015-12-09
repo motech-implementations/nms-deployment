@@ -1,4 +1,12 @@
 ---
+- name: Add Collectd Server port in firewall
+  shell:
+        firewall-cmd --zone=public --add-port=25826/udp --permanent
+  become: yes
+  become_method: sudo
+  notify:
+    - Reload firewall
+    
 - template: 
     src=roles/collectd/templates/plugins/network-server.conf.j2 
     dest=/etc/collectd.d/network.conf
