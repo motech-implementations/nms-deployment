@@ -1,0 +1,95 @@
+- name: "Install facette dependencies"
+  yum: >
+    name={{ item }}
+    state=latest
+    enablerepo=epel
+  with_items:
+    - rrdtool-devel
+    - pandoc
+    - pkgconfig
+    - git
+    - golang
+    - npm
+    - nodejs
+
+- name: "Create the facette user"
+  user: >
+    name=facette
+    state=present
+
+- name: "Download the facette sources"
+  git: >
+    repo=https://github.com/facette/facette.git
+    dest=/opt/facette
+  register: facette_update
+
+- name: "Build facette"
+  shell: |
+    executable=/bin/bash
+    chdir=/opt/facette
+    source /etc/profile
+    make
+    [ -f /etc/init.d/facette ] && service facette stop
+    make install
+  when: facette_update|changed
+  notify:
+    - Restart Facette
+
+- name: "Create facette directories"
+  file: >
+    name={{ item }}
+    recurse=yes
+    owner=facette
+    group=facette
+    mode=0755
+    state=directory
+  with_items:
+    - /etc/facette/providers
+    - /var/lib/facette
+    - /var/run/facette
+
+- name: "Copy facette configuration file"
+  template: >
+    src=files/facette/facette.json
+    dest=/etc/facette/facette.json
+    mode=0644
+    owner=facette
+    group=facette
+  notify:
+    - Restart Facette
+
+- name: "Copy facette collectd configuration file"
+  template: >
+    src=files/facette/collectd.json
+    dest=/etc/facette/providers/collectd.json
+    mode=0644
+    owner=facette
+    group=facette
+  notify:
+    - Restart Facette
+
+- name: "Install Facette init.d script"
+  copy: >
+    src=files/facette/facette.init.sh
+    dest=/etc/init.d/facette
+    owner=root
+    group=root
+    mode=0700
+  notify:
+    - Restart Facette
+
+- name: Add Facette port in firewall
+  shell:
+        firewall-cmd --zone=public --add-port={{ facette_port }}/tcp --permanent
+  become: yes
+  become_method: sudo
+  notify:
+    - Reload firewall
+
+- name: "Make sure Facette is running and starts on boot"
+  service: >
+    name=facette
+    state=started
+    enabled=yes
+    runlevel=5
+

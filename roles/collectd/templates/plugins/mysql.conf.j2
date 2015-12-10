@@ -1,0 +1,13 @@
+LoadPlugin mysql
+<Plugin mysql>
+	<Database motech_data_services>
+		Host "localhost"
+		User "collectd"
+		Password "{{ collectd_database_password }}"
+#		MasterStats true
+#       SlaveStats true
+#       SlaveNotifications true
+		ConnectTimeout 10
+		InnodbStats true
+	</Database>
+</Plugin>

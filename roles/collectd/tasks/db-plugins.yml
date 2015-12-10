@@ -1,0 +1,39 @@
+---
+- name: Copy collect-mysql rpm
+  copy: src=files/collectd/collectd-mysql-5.5.0-2.el7.x86_64.rpm dest=/tmp
+
+- name: install collectd-mysql rpm from local file
+  yum: name=/tmp/collectd-mysql-5.5.0-2.el7.x86_64.rpm state=present
+
+- template: 
+    src=roles/collectd/templates/plugins/mysql.conf.j2
+    dest=/etc/collectd.d/mysql.conf
+  notify:
+    - Restart Collectd
+
+- name: Copy python-urllib3 rpm
+  copy: src=files/collectd/python-urllib3-1.10.2-2.el7_1.noarch.rpm dest=/tmp
+
+- name: Copy python-six rpm
+  copy: src=files/collectd/python-six-1.3.0-4.el7.noarch.rpm dest=/tmp
+
+- name: Copy python-requests rpm
+  copy: src=files/collectd/python-requests-2.6.0-1.el7_1.noarch.rpm dest=/tmp
+
+- name: install python-requests rpm from local file
+  yum: name={{item}} state=present
+  with_items:
+    - /tmp/python-urllib3-1.10.2-2.el7_1.noarch.rpm
+    - /tmp/python-six-1.3.0-4.el7.noarch.rpm
+    - /tmp/python-requests-2.6.0-1.el7_1.noarch.rpm
+
+- name: Copy collectd-activemq plugin
+  copy: src=files/collectd/activemq/collectd-activemq-python/ dest=/usr/lib/collectd/plugins/python/activemq
+
+- name: Copy activemq plugin conf
+  copy: src=roles/collectd/templates/plugins/activemq.conf dest=/etc/collectd.d/
+  notify:
+    - Restart Collectd
+
+
+       

@@ -1,0 +1,6 @@
+---
+- template: 
+    src=roles/collectd/templates/plugins/network-client.conf.j2 
+    dest=/etc/collectd.d/network.conf
+  notify:
+    - Restart Collectd

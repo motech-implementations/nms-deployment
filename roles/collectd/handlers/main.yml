@@ -1,0 +1,19 @@
+---
+- name: Restart Facette
+  service: 
+    name=facette
+    state=restarted
+
+- name: Restart Collectd
+  service: 
+    name=collectd
+    state=restarted
+
+# This should be moved to a handler and shared between here and the webserver/db
+# playbooks
+- name: Reload firewall 
+  shell:
+        firewall-cmd --reload
+  become: yes
+  become_method: sudo
+

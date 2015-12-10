@@ -1,0 +1,86 @@
+- name: install collectd
+  hosts: all
+  tasks:
+    - include: roles/collectd/tasks/install.yml
+      sudo: yes
+      vars:
+        collectd_version: 5.5.0
+  tags:
+    - collectd
+    - collectd-server
+    - collectd-client
+  handlers:
+    - include: roles/collectd/handlers/main.yml
+
+- name: Install common collectd plugins 
+  hosts: all
+  tasks:
+    - include: roles/collectd/tasks/common-plugins.yml
+  tags:
+    - collectd
+    - collectd-server
+    - collectd-client
+  handlers:
+    - include: roles/collectd/handlers/main.yml
+
+- name: install client collectd plugins
+  hosts: webservers:reportwebserver:dbservers:reportdbserver
+  tasks:
+    - include: roles/collectd/tasks/client-plugins.yml
+  tags:
+    - collectd
+    - collectd-client
+  handlers:
+    - include: roles/collectd/handlers/main.yml
+
+- name: install server collectd plugins
+  hosts: health-monitor
+  tasks:
+    - include: roles/collectd/tasks/server-plugins.yml
+  tags:
+    - collectd
+    - collectd-server
+  handlers:
+    - include: roles/collectd/handlers/main.yml
+
+# - name: collectd webserver plugins
+#   hosts: webservers:reportwebserver
+#   tasks:
+#     - include: roles/collectd/tasks/webserver-plugins.yml
+#   tags:
+#     - collectd
+#     - collectd-client
+#  handlers:
+#    - include: roles/collectd/handlers/main.yml
+
+- name: collectd dbserver plugins
+  hosts: dbservers:reportdbserver
+  tasks:
+    - include: roles/collectd/tasks/db-plugins.yml
+  tags:
+    - collectd
+    - collectd-client
+  handlers:
+    - include: roles/collectd/handlers/main.yml
+
+- name: install epel repository
+  hosts: health-monitor
+  remote_user: root
+  roles:
+    - epel
+  tags:
+    - epel
+    - collectd
+    - collectd-server
+
+- name: install facette
+  hosts: health-monitor
+  tasks:
+    - include: roles/collectd/tasks/facette.yml
+      vars:
+        facette_port: 12003
+  tags:
+    - collectd
+    - facette
+  handlers:
+    - include: roles/collectd/handlers/main.yml
