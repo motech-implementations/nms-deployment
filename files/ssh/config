@@ -1,0 +1,44 @@
+Host github.com
+   Port 22
+   IdentityFile ~/.ssh/id_rsa.github
+
+Host web1
+   Port 1027
+   HostName 192.168.200.1
+
+Host web2
+   Port 1027
+   HostName 192.168.200.2
+
+Host web3
+   Port 1027
+   HostName 192.168.200.3
+
+Host db1
+   Port 1027
+   HostName 192.168.200.5
+
+Host db1
+   Port 1027
+   HostName 192.168.200.5
+
+Host db2
+   Port 1027
+   Hostname 192.168.200.6
+
+Host reportingdb1
+   Port 1027
+   Hostname 192.168.200.67
+
+Host reportweb1
+   Port 1027
+   Hostname 192.168.200.66
+
+Host reportingdb2
+   Port 1027
+   Hostname 192.168.200.68
+
+Host nagios
+   Port 1027
+   Hostname 192.168.200.4
+

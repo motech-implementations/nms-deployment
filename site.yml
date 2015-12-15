@@ -1,18 +1,4 @@
 ---
-# There should really be a playbook for core server setup that is seperate from
-# the system deployment playbook
-- name: Update ssh login banner
-  hosts: all
-  tasks:
-      copy:
-        src=files/sshd/sshd-banner
-        dest=/etc/sshd/sshd-banner
-        owner=root
-        group=root
-        mode=0644
-  become: yes
-  become_method: sudo
-
 # This playbook deploys the whole application stack in this site.  
 - name: configure motech webservers 
   hosts: webservers
