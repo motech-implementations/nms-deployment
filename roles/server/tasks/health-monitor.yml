@@ -1,0 +1,17 @@
+---
+- name: Deploy Github deploy private key
+  copy:
+    src: files/ssh/id_rsa.github
+    dest: /home/grameen/.ssh/
+    owner: grameen
+    group: grameen
+    mode: 0600
+  
+- name: Deploy Github deploy public key
+  copy:
+    src: files/ssh/id_rsa.github.pub
+    dest: /home/grameen/.ssh/
+    owner: grameen
+    group: grameen
+    mode: 0644
+  

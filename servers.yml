@@ -1,45 +1,12 @@
 ---
 # There should really be a playbook for core server setup that is seperate from
 # the system deployment playbook
-- name: Update ssh login banner
+- name: Common Server Setup
   hosts: all
   tasks:
-      copy:
-        src=files/ssh/sshd-banner
-        dest=/etc/ssh/sshd-banner
-        owner=root
-        group=root
-        mode=0644
-  become: yes
-  become_method: sudo
+    - include: roles/server/tasks/all.yml
 
-- name: Deploy Github deploy private key
+- name: Health Monitor Server Setup
   hosts: health-monitor
   tasks:
-      copy:
-        src=files/ssh/id_rsa.github
-        dest=/home/grameen/.ssh/
-        owner=grameen
-        group=grameen
-        mode=0600
-  
-- name: Deploy Github deploy public key
-  hosts: health-monitor
-  tasks:
-      copy:
-        src=files/ssh/id_rsa.github.pub
-        dest=/home/grameen/.ssh/
-        owner=grameen
-        group=grameen
-        mode=0644
-  
-- name: Deploy ssh connection config
-  hosts: health-monitor
-  tasks:
-      copy:
-        src=files/ssh/config
-        dest=/home/grameen/.ssh/
-        owner=grameen
-        group=grameen
-        mode=0600
-  
+    - include: roles/server/tasks/health-monitor.yml

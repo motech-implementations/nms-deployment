@@ -1,0 +1,19 @@
+---
+- name: Deploy ssh connection config
+  copy:
+   src: files/ssh/config
+   dest: /home/grameen/.ssh/
+   owner: grameen
+   group: grameen
+   mode: 0600
+
+- name: Deploy ssh login banner
+  copy:
+   src: files/ssh/sshd-banner
+   dest: /etc/ssh/sshd-banner
+   owner: root
+   group: root
+   mode: 0644
+  become: yes
+  become_method: sudo
+
