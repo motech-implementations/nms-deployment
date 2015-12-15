@@ -3,11 +3,15 @@
   service: 
     name=facette
     state=restarted
+  become: yes
+  become_method: sudo
 
 - name: Restart Collectd
   service: 
     name=collectd
     state=restarted
+  become: yes
+  become_method: sudo
 
 # This should be moved to a handler and shared between here and the webserver/db
 # playbooks
