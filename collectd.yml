@@ -16,6 +16,7 @@
   hosts: all
   tasks:
     - include: roles/collectd/tasks/common-plugins.yml
+      sudo: yes
   tags:
     - collectd
     - collectd-server
@@ -27,6 +28,7 @@
   hosts: webservers:reportwebserver:dbservers:reportdbserver
   tasks:
     - include: roles/collectd/tasks/client-plugins.yml
+      sudo: yes
   tags:
     - collectd
     - collectd-client
@@ -37,6 +39,7 @@
   hosts: health-monitor
   tasks:
     - include: roles/collectd/tasks/server-plugins.yml
+      sudo: yes
   tags:
     - collectd
     - collectd-server
@@ -57,6 +60,7 @@
   hosts: dbservers:reportdbserver
   tasks:
     - include: roles/collectd/tasks/db-plugins.yml
+      sudo: yes
   tags:
     - collectd
     - collectd-client
