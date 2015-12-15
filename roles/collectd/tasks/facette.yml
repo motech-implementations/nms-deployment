@@ -3,6 +3,7 @@
     name={{ item }}
     state=latest
     enablerepo=epel,rhel-7-server-optional-rpms
+    disablerepo=RHEL_7_Disc
   with_items:
     - rrdtool-devel
     - pandoc
