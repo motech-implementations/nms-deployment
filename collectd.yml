@@ -65,7 +65,8 @@
 
 - name: install epel repository
   hosts: health-monitor
-  remote_user: root
+  become: yes
+  become_user: sudo
   roles:
     - epel
   tags:
