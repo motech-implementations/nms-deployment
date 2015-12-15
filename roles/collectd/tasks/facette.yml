@@ -11,6 +11,8 @@
     - golang
     - npm
     - nodejs
+  become: yes
+  become_method: sudo
 
 - name: "Create the facette user"
   user: >

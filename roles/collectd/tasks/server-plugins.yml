@@ -28,5 +28,7 @@
 - yum: 
     name=collectd-rrdtool 
     state=latest
+  become: yes
+  become_method: sudo
   notify:
     - Restart Collectd
