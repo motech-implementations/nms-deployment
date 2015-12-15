@@ -9,5 +9,7 @@
     - memory.conf
     - processes.conf
     - swap.conf
+  become: yes
+  become_method: sudo
   notify:
     - Restart Collectd

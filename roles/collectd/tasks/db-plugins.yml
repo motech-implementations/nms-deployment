@@ -8,6 +8,8 @@
 - template: 
     src=roles/collectd/templates/plugins/mysql.conf.j2
     dest=/etc/collectd.d/mysql.conf
+  become: yes
+  become_method: sudo
   notify:
     - Restart Collectd
 
@@ -29,9 +31,13 @@
 
 - name: Copy collectd-activemq plugin
   copy: src=files/collectd/activemq/collectd-activemq-python/ dest=/usr/lib/collectd/plugins/python/activemq
+  become: yes
+  become_method: sudo
 
 - name: Copy activemq plugin conf
   copy: src=roles/collectd/templates/plugins/activemq.conf dest=/etc/collectd.d/
+  become: yes
+  become_method: sudo
   notify:
     - Restart Collectd
 
