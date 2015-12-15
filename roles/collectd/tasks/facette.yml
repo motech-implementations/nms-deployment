@@ -29,6 +29,8 @@
     group=grameen
     mode=0755
     state=directory
+  become: yes
+  become_method: sudo
 
 - name: "Download the facette sources"
   git: >
