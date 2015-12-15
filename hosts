@@ -1,0 +1,26 @@
+# NMS Inventory file to manage all hosts under controlling server.
+#
+#   - Comments begin with the '#' character
+#   - Blank lines are ignored
+#   - Groups of hosts are delimited by [header] elements
+#   - You can enter hostnames or ip addresses
+#   - A hostname/ip can be a member of multiple groups
+
+[webservers]
+192.168.200.1:1027
+192.168.200.2:1027
+192.168.200.3:1027
+
+[dbservers]
+192.168.200.5:1027
+192.168.200.6:1027
+
+[reportwebserver]
+192.168.200.65:1027
+192.168.200.66:1027
+
+[reportdbserver]
+192.168.200.67:1027
+192.168.200.68:1027
+
+localhost ansible_connection=local
