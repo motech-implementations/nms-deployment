@@ -83,5 +83,7 @@
   tags:
     - collectd
     - facette
+  become: yes
+  become_method: sudo
   handlers:
     - include: roles/collectd/handlers/main.yml

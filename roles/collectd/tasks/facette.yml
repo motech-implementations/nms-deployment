@@ -12,15 +12,11 @@
     - golang
     - npm
     - nodejs
-  become: yes
-  become_method: sudo
 
 - name: "Create the facette user"
   user: >
     name=facette
     state=present
-  become: yes
-  become_method: sudo
 
 - name: "Create facette code directorie"
   file: >
@@ -29,8 +25,6 @@
     group=grameen
     mode=0755
     state=directory
-  become: yes
-  become_method: sudo
 
 - name: "Download the facette sources"
   git: >
@@ -90,16 +84,12 @@
     owner=root
     group=root
     mode=0700
-  become: yes
-  become_method: sudo
   notify:
     - Restart Facette
 
 - name: Add Facette port in firewall
   shell:
         firewall-cmd --zone=public --add-port={{ facette_port }}/tcp --permanent
-  become: yes
-  become_method: sudo
   notify:
     - Reload firewall
 
@@ -109,6 +99,3 @@
     state=started
     enabled=yes
     runlevel=5
-  become: yes
-  become_method: sudo
-
