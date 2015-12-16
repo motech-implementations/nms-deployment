@@ -7,4 +7,23 @@
   notify:
     - Restart Collectd
 
+- name: SELinux - check loaded modules
+  shell: semodule -l
+  become: yes
+  become_method: sudo
+  register: selinuxmodules
+  always_run: yes
+  changed_when: False
+ 
+- name: copy SELinux modules for snmpd access to /tmp
+  action: copy src=files/collectd/selinux/collectd_catalina_log.pp dest=/tmp/collectd_catalina_log.p owner=root mode=600
+  become: yes
+  become_method: sudo
+  when: "selinuxmodules.stdout.find(collectd_catalina_log') == -1"
+ 
+- name: install SELinux module for snmpd access
+  command: semodule -i /tmp/collectd_catalina_log.pp
+  become: yes
+  become_method: sudo
+  when: "selinuxmodules.stdout.find(collectd_catalina_log') == -1"
        
