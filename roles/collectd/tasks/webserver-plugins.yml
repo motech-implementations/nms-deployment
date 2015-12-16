@@ -21,7 +21,7 @@
   become_method: sudo
   when: selinuxmodules.stdout.find("collectd_catalina_log") == -1
  
-- name: install SELinux module for snmpd access
+- name: install SELinux module for collectd catalina log access
   command: semodule -i /tmp/collectd_catalina_log.pp
   become: yes
   become_method: sudo
