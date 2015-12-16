@@ -50,8 +50,8 @@
   tags:
     - collectd
     - collectd-client
- handlers:
-   - include: roles/collectd/handlers/main.yml
+  handlers:
+    - include: roles/collectd/handlers/main.yml
 
 - name: collectd dbserver plugins
   hosts: dbservers:reportdbserver
