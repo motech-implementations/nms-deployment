@@ -32,6 +32,9 @@
     dest=/opt/facette
   register: facette_update
 
+- stat: path=/usr/local/bin/facette
+  register: facette_binary
+
 - name: "Build facette"
   shell: |
     executable=/bin/bash
@@ -40,7 +43,7 @@
     make
     [ -f /etc/init.d/facette ] && service facette stop
     make install
-  when: facette_update|changed
+  when: facette_update|changed|facette_binary.stat.exists == False
   notify:
     - Restart Facette
 
