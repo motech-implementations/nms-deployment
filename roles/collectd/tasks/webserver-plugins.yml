@@ -16,7 +16,7 @@
   changed_when: False
  
 - name: copy SELinux modules for collectd catalina log access to /tmp
-  action: copy src=files/collectd/selinux/collectd_catalina_log.pp dest=/tmp/collectd_catalina_log.p owner=root mode=600
+  action: copy src=files/collectd/selinux/collectd_catalina_log.pp dest=/tmp/collectd_catalina_log.pp owner=root mode=600
   become: yes
   become_method: sudo
   when: selinuxmodules.stdout.find("collectd_catalina_log") == -1
