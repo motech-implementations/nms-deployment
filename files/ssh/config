@@ -2,6 +2,9 @@ Host github.com
    Port 22
    IdentityFile ~/.ssh/id_rsa.github
 
+Host 192.168.200.*
+   Port 1027
+
 Host web1
    Port 1027
    HostName 192.168.200.1
