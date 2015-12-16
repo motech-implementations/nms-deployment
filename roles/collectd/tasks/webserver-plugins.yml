@@ -1,0 +1,10 @@
+---
+- template: 
+    src=roles/collectd/templates/plugins/tail.conf
+    dest=/etc/collectd.d/tail.conf
+  become: yes
+  become_method: sudo
+  notify:
+    - Restart Collectd
+
+       

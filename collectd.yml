@@ -43,15 +43,15 @@
   handlers:
     - include: roles/collectd/handlers/main.yml
 
-# - name: collectd webserver plugins
-#   hosts: webservers:reportwebserver
-#   tasks:
-#     - include: roles/collectd/tasks/webserver-plugins.yml
-#   tags:
-#     - collectd
-#     - collectd-client
-#  handlers:
-#    - include: roles/collectd/handlers/main.yml
+- name: collectd webserver plugins
+  hosts: webservers
+  tasks:
+    - include: roles/collectd/tasks/webserver-plugins.yml
+  tags:
+    - collectd
+    - collectd-client
+ handlers:
+   - include: roles/collectd/handlers/main.yml
 
 - name: collectd dbserver plugins
   hosts: dbservers:reportdbserver
