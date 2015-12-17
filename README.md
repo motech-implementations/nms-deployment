@@ -8,15 +8,17 @@
 ```sh
   ansible-playbook  site.yml -i hosts --ask-vault-pass --tags motechdeploy--ask-sudo-pass
 ```
-Change in Configuration like change in SMS properties
+###Configuration changes in SMS properties
 
 1) Update the required configuration in the     /opt/nms_deployment/roles/web/templates/*.j2 file
+
 2) Execute following in /opt/nms_deployement
+
 ```sh
 ansible-playbook  site.yml --ask-vault-pass --tags webconfig --ask-sudo-pass
 ```
 
-###Collecd
+###Collectd
 
 For collectd to gather database statistics the following user needs to be created:
 
