@@ -25,14 +25,6 @@
   tags:
     - db
 
-- name: configure and deploy the dbserver and application code
-  hosts: reportdbserver 
-  remote_user: grameen
-  roles:
-    - reportdb
-  tags:
-    - reportdb
-
 - name: configure and deploy keepalived
   hosts: dbservers
   remote_user: grameen
