@@ -2,20 +2,21 @@
 
 ###Installation OF NMS Builds
 
+Steps to upgrade both bundles and configurations 
+
 1) Copy the NMS bundles don't copy testing.jar on health monitoring server at /opt/repo/NMS
 
 2) Execute following in /opt/nms_deployement 
 ```sh
   ansible-playbook  site.yml -i hosts --ask-vault-pass --tags motechdeploy--ask-sudo-pass
 ```
-###Configuration changes in SMS properties
 
-1) Update the required configuration in the     /opt/nms_deployment/roles/web/templates/*.j2 file
+###MOTECH Configuration changes 
 
-2) Execute following in /opt/nms_deployement
+Steps to upgrade only configurations
 
 ```sh
-ansible-playbook  site.yml --ask-vault-pass --tags webconfig --ask-sudo-pass
+ansible-playbook  site.yml -i hosts --ask-vault-pass --tags webconfig --ask-sudo-pass
 ```
 
 ###Collectd
