@@ -1,16 +1,25 @@
 # nms-deployment
 
-Installation OF NMS Builds
+###Installation OF NMS Builds
+
+Steps to upgrade both bundles and configurations 
+
 1) Copy the NMS bundles don't copy testing.jar on health monitoring server at /opt/repo/NMS
+
 2) Execute following in /opt/nms_deployement 
+```sh
   ansible-playbook  site.yml -i hosts --ask-vault-pass --tags motechdeploy--ask-sudo-pass
+```
 
-Change in Configuration like change in SMS properties
+###MOTECH Configuration changes 
 
-1) Update the required configuration in the     /opt/nms_deployment/roles/web/templates/*.j2 file
-2) Execute following in /opt/nms_deployement
+Steps to upgrade only configurations
 
-ansible-playbook  site.yml --ask-vault-pass --tags webconfig --ask-sudo-pass
+```sh
+ansible-playbook  site.yml -i hosts --ask-vault-pass --tags webconfig --ask-sudo-pass
+```
+
+###Collectd
 
 For collectd to gather database statistics the following user needs to be created:
 
@@ -28,6 +37,6 @@ GRANT REPLICATION CLIENT ON *.* TO 'collectd'@'localhost';
 collectd_database_password is in group_vars/all
 
 To install collectd on all servers, connect them and install facette on the health monitor run
-
+```sh
 ansible-playbook collectd.yml -i hosts --ask-pass --ask-vault-pass --tags collectd
-
+```
