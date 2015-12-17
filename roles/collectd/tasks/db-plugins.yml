@@ -4,6 +4,8 @@
 
 - name: install collectd-mysql rpm from local file
   yum: name=/tmp/collectd-mysql-5.5.0-2.el7.x86_64.rpm state=present
+  become: yes
+  become_method: sudo
 
 - template: 
     src=roles/collectd/templates/plugins/mysql.conf.j2
