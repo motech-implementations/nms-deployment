@@ -49,5 +49,50 @@
   notify:
     - Restart Collectd
 
-
+- name: Set collectd_tcp_network_connect to true
+  seboolean: name=collectd_tcp_network_connect state=yes persistent=yes
        
+- name: SELinux - check loaded modules
+  shell: semodule -l
+  become: yes
+  become_method: sudo
+  register: selinuxmodules
+  always_run: yes
+  changed_when: False
+ 
+- name: copy SELinux modules for collectd_ldconfig /tmp
+  action: copy src=files/collectd/selinux/collectd_ldconfig.pp dest=/tmp/ owner=root mode=600
+  become: yes
+  become_method: sudo
+  when: selinuxmodules.stdout.find("collectd_ldconfig") == -1
+ 
+- name: install SELinux module for collectd_ldconfig
+  command: semodule -i /tmp/collectd_ldconfig.pp
+  become: yes
+  become_method: sudo
+  when: selinuxmodules.stdout.find("collectd_ldconfig") == -1
+
+- name: copy SELinux modules for collectd_sh /tmp
+  action: copy src=files/collectd/selinux/collectd_sh.pp dest=/tmp/ owner=root mode=600
+  become: yes
+  become_method: sudo
+  when: selinuxmodules.stdout.find("collectd_sh") == -1
+ 
+- name: install SELinux module for collectd_sh
+  command: semodule -i /tmp/collectd_sh.pp
+  become: yes
+  become_method: sudo
+  when: selinuxmodules.stdout.find("collectd_sh") == -1
+
+- name: copy SELinux modules for collectd_uname /tmp
+  action: copy src=files/collectd/selinux/collectd_uname.pp dest=/tmp/ owner=root mode=600
+  become: yes
+  become_method: sudo
+  when: selinuxmodules.stdout.find("collectd_uname") == -1
+ 
+- name: install SELinux module for collectd_uname
+  command: semodule -i /tmp/collectd_uname.pp
+  become: yes
+  become_method: sudo
+  when: selinuxmodules.stdout.find("collectd_uname") == -1
+
