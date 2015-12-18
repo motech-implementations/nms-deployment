@@ -30,6 +30,9 @@ CREATE USER 'collectd'@'localhost' IDENTIFIED BY '{{ collectd_database_password 
 -- ("GRANT USAGE" is synonymous to "no privileges") 
 GRANT USAGE ON *.* TO 'collectd'@'localhost';
 
+-- ("GRANT PROCESS" allows access to show processlist) 
+GRANT PROCESS ON *.* TO 'collectd'@'localhost';
+
 -- Permissions for the MasterStats and SlaveStats options
 GRANT REPLICATION CLIENT ON *.* TO 'collectd'@'localhost';
 ```
