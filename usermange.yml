@@ -1,0 +1,69 @@
+---
+- user: grameen
+  hosts: all
+  gather_facts: true
+
+  tasks:
+    - name: Create admins group
+      group: name=admins system=yes state=present
+      sudo : true
+
+    - name: Create MOTECH L3 users group
+      group: name=motechl3  state=present
+      sudo: true
+
+    - name: Create MOTECH L1 users group
+      group: name=motechl1  state=present
+      sudo: true
+
+    - user: name={{ item.0.name }} group={{ item.1.group }} state={{ item.1.state }} generate_ssh_key=yes expires={{ item.1.enddate }}
+      with_subelements:
+        - user_list
+        - attributes
+      sudo: true
+
+    - name: Downloading pub key
+      fetch: src=/home/{{ item.0.name }}/.ssh/id_rsa.pub dest=/tmp/id_rsa-prefix-{{ ansible_hostname }}-{{ item.0.name }} flat=yes
+      with_subelements:
+        - user_list
+        - attributes
+      sudo: true
+
+    - name: Setup | authorized key upload
+      authorized_key: user={{ item.0.name }} key="{{ lookup('file', '/tmp/id_rsa-prefix-' + ansible_hostname + '-' + item.0.name ) }}"
+        path='/home/{{ item.0.name }}/.ssh/authorized_keys'
+        manage_dir=no
+      with_subelements:
+        - user_list
+        - attributes
+      sudo: true
+    
+    - name: Sudoers | update sudoers file and validate
+      lineinfile: dest=/etc/sudoers insertafter=EOF regexp='^%admins'  line='%admins ALL=(ALL) NOPASSWD:ALL' state=present validate='visudo -cf %s'
+      sudo: true
+
+    - name: also make sure ssh-agent works via sudo
+      lineinfile: dest=/etc/sudoers state=present regexp='^Defaults env_keep\+\=SSH_AUTH_SOCK' line='Defaults env_keep+=SSH_AUTH_SOCK'
+      sudo: true
+
+
+    - name: Fetch Private Key
+      fetch: src=/home/{{ item.0.name }}/.ssh/id_rsa dest=/tmp/id_rsa_private-prefix-{{ ansible_hostname }}-{{ item.0.name }} flat=yes
+      with_subelements:
+        - user_list
+        - attributes
+      sudo: true
+
+    - name: Delete Public key from local server
+      file: path=/tmp/id_rsa-prefix-{{ ansible_hostname }}-{{ item.0.name }} state=absent
+      delegate_to: 127.0.0.1
+      with_subelements:
+       - user_list
+       - attributes
+
+    - name: Change Private key permissions
+      file : path=/tmp/id_rsa_private-prefix-{{ ansible_hostname }}-{{ item.0.name }} mode=0400
+      delegate_to: 127.0.0.1
+      with_subelements:
+       - user_list
+       - attributes
