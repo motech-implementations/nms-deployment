@@ -27,24 +27,15 @@ ansible-playbook  site.yml -i hosts --ask-vault-pass --tags webconfig --ask-sudo
 
 User management in MOTECH-NMS servers can be done by following below steps
 
-  - Update User name and attributes in ( Use ansible-vault it edit this file)
-* [group_vars/all] [PlDb]
+  - Update User name and attributes 
 ```sh
   ansible-vault edit group_vars/all
 ```
-  
-  - Edit/Enter username and attributed like 
->user_list:
->   - name: testuser
->     attributes:
->       - group: admins
->         state: present
->         enddate: 1482318845
-  - Execute ansible command
+  - Execute ansible command at **/opt/nms_deployement**
 ```sh
   ansible-playbook usermange.yml -i hosts --ask-vault-pass --ask-su-pass
 ```
-  - After Execute SSH private keys will be available in health monitor at **/tmp/ direcorty** for particular host and user
+  - After Execute SSH private keys will be available in health monitor at **/tmp/** directory for particular host and user
 
 ###Collectd
 
