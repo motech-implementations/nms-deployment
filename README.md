@@ -1,6 +1,6 @@
 # nms-deployment
 
-###Installation OF NMS Builds
+###Installation of NMS Bundles
 
 Steps to upgrade both bundles and configurations 
 
@@ -17,6 +17,17 @@ Steps to upgrade only configurations
 
 ```sh
 ansible-playbook  site.yml -i hosts --ask-vault-pass --tags webconfig --ask-sudo-pass
+```
+###User Management 
+
+User management in MOTECH-NMS servers can be done by following below steps
+
+  - Update Usernanme and attributes in ( Use ansible-vault it edit this file)
+* [groupvars/all] [PlDb]
+
+  - Execute ansible command
+```sh
+  ansible-playbook usermange.yml -i hosts --ask-vault-pass --ask-su-pass
 ```
 
 ###Collectd

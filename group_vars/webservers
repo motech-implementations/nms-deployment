@@ -6,9 +6,3 @@ tomcat_shutdown_port: 8005
 tomcat_ajp_port: 8009
 tomcat_redirect_port: 8443
 tomcat_connection_timeout: 20000
-tomcat_users: [
-  { name: 'tomcat', password: 'tomcat', roles: 'tomcat,admin-gui,manager-gui,manager-script,manager-jmx,manager-status'}
- ]
-
-
-
