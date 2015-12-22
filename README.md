@@ -1,23 +1,41 @@
 # nms-deployment
 
-###Installation OF NMS Builds
+###Installation of NMS Bundles
 
-Steps to upgrade both bundles and configurations 
+Steps to upgrade both bundles and configurations, These steps needs to be followed in NMS HEALTH monitor server
 
-1) Copy the NMS bundles don't copy testing.jar on health monitoring server at /opt/repo/NMS
-
-2) Execute following in /opt/nms_deployement 
+  - Copy the NMS bundles **don't copy testing.jar** on health monitoring server at 
 ```sh
+  cp *.jar /opt/repo/NMS
+```
+
+  - Execute following in **/opt/nms_deployement**
+
+```sh
+  cd /opt/nms_deployement
   ansible-playbook  site.yml -i hosts --ask-vault-pass --tags motechdeploy--ask-sudo-pass
 ```
 
-###MOTECH Configuration changes 
+###NMS configuration changes only 
 
 Steps to upgrade only configurations
 
 ```sh
 ansible-playbook  site.yml -i hosts --ask-vault-pass --tags webconfig --ask-sudo-pass
 ```
+###User Management 
+
+User management in MOTECH-NMS servers can be done by following below steps
+
+  - Update User name and attributes 
+```sh
+  ansible-vault edit group_vars/all
+```
+  - Execute ansible command at **/opt/nms_deployement**
+```sh
+  ansible-playbook usermange.yml -i hosts --ask-vault-pass --ask-su-pass
+```
+  - After Execute SSH private keys will be available in health monitor at **/tmp/** directory for particular host and user
 
 ###Collectd
 
