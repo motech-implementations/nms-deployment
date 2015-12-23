@@ -90,6 +90,15 @@
   notify:
     - Restart Facette
 
+- name: "Create Facette Daemon path"
+  file: >
+    path=/var/run/facette
+    state=directory
+    owner=facette
+    group=facette
+  notify:
+    - Restart Facette
+
 - name: Add Facette port in firewall
   shell:
         firewall-cmd --zone=public --add-port={{ facette_port }}/tcp --permanent

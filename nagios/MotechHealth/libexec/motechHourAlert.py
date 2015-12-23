@@ -78,7 +78,7 @@ if (data['metadata']['totalCount'] > 0):
           if ((pr['data'][count]['alertType']) =='LOW'):
         	  Low_Count = Low_Count + 1
           datetime = time.strftime('%d-%b-%y %H:%M:%S', time.localtime((pr['data'][count]['creationDate'])/1000))
-          alert = datetime+","+str((pr['data'][count]['id']))+","+(pr['data'][count]['alertType'])+","+(pr['data'][count]['name'])+","+(pr['data'][count]['description'])
+          alert = datetime+","+str((pr['data'][count]['id']))+","+str((pr['data'][count]['alertType']))+","+str((pr['data'][count]['name']))+","+str((pr['data'][count]['description']))
           f.write(alert)
           f.write('\n')
   if( Fresh_Alert > 0):
