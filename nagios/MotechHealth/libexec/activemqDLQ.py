@@ -4,8 +4,8 @@ import requests
 import xml.etree.ElementTree as ET
 import sys
 status=0
-broker1url='http://192.168.200.5:8161/admin/xml/queues.jsp'
-broker2url='http://192.168.200.6:8161/admin/xml/queues.jsp'
+broker1url='http://192.168.200.6:8161/admin/xml/queues.jsp'
+broker2url='http://192.168.200.5:8161/admin/xml/queues.jsp'
 Critical_Count = 0
 High_Count = 0
 Medium_Count = 0
@@ -17,13 +17,17 @@ STATUS_CRITICAL=2
 
 #This Procedure Checks if passed URL is working or not, If URL is working than
 #it finds if there is any message in ActtiveMQ Dead letter Queue
+# RETURN CODE
+#       SUCCESS                              ---> 0
+#       URL NOT WORKING                      ---> 2
+#       URL WORKING BUT SOME MESSAGES in DLQ ---> 1
 
 def request_url(url):
   return_status=0
   params = None
   try:
     req = requests.get(url, params=params, auth=('admin','admin'))
-    if (req.status_code !='200'):
+    if (req.status_code == 200):
       root = ET.fromstring(req.text)
       for child in root:
         if child.tag == 'queue' and child.attrib['name']=='ActiveMQ.DLQ':
@@ -53,7 +57,7 @@ def request_alerts():
         status=STATUS_CRITICAL
       else:
         status=STATUS_OK
-	print "No Messages in ActiveMQ DLQ"
+        print "No Messages in ActiveMQ DLQ"
   else:
     if (return_value == 1):
       status=STATUS_CRITICAL
