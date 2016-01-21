@@ -1,7 +1,7 @@
 #!/bin/bash
 set -x
 #MySQL credentials to do backup
-MySQLUserName="root"
+MySQLUserName=""
 MySQLPassWord=""
 #This variable contains mysql and mysqladmin command and other required option for mysql (including user and pass).
 MySQLCommand=""

@@ -29,7 +29,7 @@
 [slavedb_motech]
 192.168.200.6:1027
 [slavedb_report]
-192.168.200.66:1027
+192.168.200.68:1027
 
 #[stagingwebserver]
 # 10.203.10.11

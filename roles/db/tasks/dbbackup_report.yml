@@ -42,7 +42,7 @@
   cron: >
     name=ReprotDbFullBackup
     minute="30"
-    hour="4"
+    hour="8"
     weekday=1
     job="cd /usr/local/dbbackup/bin && ./automysqlbackup > /dev/null"
     user=root
@@ -52,8 +52,8 @@
 - name: Schedule cront for Incremental Db backup of Report
   cron: >
       name=ReportDbIncrementalBackup
-      minute="45"
-      hour="4"
+      minute="50"
+      hour="8"
       weekday=*
       job="cd /usr/local/dbbackup/bin && ./mysql-incremental > /dev/null"
       user=root
