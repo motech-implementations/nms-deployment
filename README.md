@@ -70,7 +70,7 @@ Steps to deploy on Motech Slave server
   ansible-playbook -vvv  site.yml -i hosts --ask-vault-pass --tags dbbackupscript  --ask-sudo-pass
 ```
 
-Steps tp deploy on Report Slave server
+Steps to deploy on Report Slave server
 ```sh
   ansible-playbook -vvv  site.yml -i hosts --ask-vault-pass --tags dbbackupscript_report  --ask-sudo-pass
 ```
