@@ -58,6 +58,6 @@
   tasks:
    - include:  roles/db/tasks/dbbackup_report.yml
   tags:
-   - dbbackupscriptreport
+   - dbbackupscript_report
 
 
