@@ -61,3 +61,16 @@ To install collectd on all servers, connect them and install facette on the heal
 ```sh
 ansible-playbook collectd.yml -i hosts --ask-pass --ask-vault-pass --tags collectd
 ```
+
+###DB Backup Script Deployement
+
+Steps to deploy on Motech Slave server 
+
+```sh
+  ansible-playbook -vvv  site.yml -i hosts --ask-vault-pass --tags dbbackupscript  --ask-sudo-pass
+```
+
+Steps tp deploy on Report Slave server
+```sh
+  ansible-playbook -vvv  site.yml -i hosts --ask-vault-pass --tags dbbackupscript_report  --ask-sudo-pass
+```
