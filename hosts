@@ -26,6 +26,13 @@
 [health-monitor]
 192.168.200.4:1027 ansible_connection=local
 
+[slavedb_motech]
+10.203.10.50
+#192.168.200.6:1027
+[slavedb_report]
+10.203.10.11
+#192.168.200.66:1027
+
 #[stagingwebserver]
 # 10.203.10.11
 #[stagingdbserver]

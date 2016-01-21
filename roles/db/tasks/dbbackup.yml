@@ -1,0 +1,61 @@
+---
+# This Playbook is to configure Activemq
+
+- name: "Create dbbackup directories"
+  file: >
+    name={{ item }}
+    recurse=yes
+    owner=grameen
+    group=grameen
+    mode=0755
+    state=directory
+  with_items:
+    - "{{dbbackuppath}}/bin"
+    - "{{dbbackuppath}}/data"
+    - "{{dbbackuppath}}/conf"
+    - "{{dbbackuppath}}/log"
+  become: yes
+  become_method: sudo
+   
+- name: Copy script code files for dbbackup
+  copy: >
+     src=files/dbbackup/bin
+     dest="{{dbbackuppath}}"
+     directory_mode=0755
+     owner=grameen
+     group=grameen
+     mode=0744
+  become: yes
+  become_method: sudo
+
+- name: Copy dbbackup configuration file
+  template: >
+    src=dbbackup/automysqlbackup.conf.j2
+    dest="{{dbbackuppath}}/conf/automysqlbackup.conf"
+    mode=0744
+    owner=grameen
+    group=grameen
+  become: yes
+  become_method: sudo
+
+- name: Schedule cront for Full Db backup of Motech
+  cron: >
+    name=MotechDbFullBackup
+    minute="30"
+    hour="4"
+    weekday=1
+    job="cd /usr/local/dbbackup/bin && ./automysqlbackup > /dev/null"
+    user=root
+  become: yes
+  become_method: sudo
+
+- name: Schedule cront for Incremental Db backup of Motech
+  cron: >
+      name=MotechDbIncrementalBackup
+      minute="45"
+      hour="4"
+      weekday=*
+      job="cd /usr/local/dbbackup/bin && ./mysql-incremental > /dev/null"
+      user=root
+  become: yes
+  become_method: sudo
