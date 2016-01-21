@@ -45,7 +45,7 @@
 
 - name: configure and deploy dbbackupScripts in db server
   hosts: slavedb_motech
-  remote_user: vagrant
+  remote_user: grameen
   serial: 1
   tasks:
    - include:  roles/db/tasks/dbbackup.yml
@@ -53,7 +53,7 @@
    - dbbackupscript
 - name: configure and deploy dbbackupScripts in db server
   hosts: slavedb_report
-  remote_user: vagrant
+  remote_user: grameen
   serial: 1
   tasks:
    - include:  roles/db/tasks/dbbackup_report.yml
