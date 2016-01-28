@@ -1,0 +1,43 @@
+
+#keeps the time that bacup has been started in unix time format
+FullBackupStartTime=""
+#keeps the time that bacup has been started in human readable format
+FullBackupStartTimeH=""
+
+#H_MySQLCommand keeps MySQL command as well as user/pass
+H_MySQLCommand=""
+#LockSessionID keeps the session ID that locks whole database, This variable will be used in Post-Script phase to kill the session.
+LockSessionID=""
+#H_LastBinlogInfo keep last binary log info including name and position after the whole database is locked.
+H_LastBinlogInfo=""
+#IncrementalBackupInfoPath keep file that will be put info of full backup and incremental backup
+IncrementalBackupInfoPath="$CONFIG_backup_dir/status/backup_info"
+#FullBackupScriptsLogFile point to a log file that contains log of pre and post scripts not main script
+FullBackupScriptsLogFile="../log/Backup_Post_Pre_log"
+ 
+MySQLCommandFunc ()
+        {
+                local H_MySQLCredentials=""
+                if [ $CONFIG_mysql_dump_password ]
+                then
+                        H_MySQLCredentials="-u $CONFIG_mysql_dump_username -p$CONFIG_mysql_dump_password"
+                else
+                        H_MySQLCredentials="-u $CONFIG_mysql_dump_username "
+                fi
+                
+                H_MySQLCommand="$(which mysql) $H_MySQLCredentials "
+        }
+
+MySQLCommandFunc
+
+#Lock all table and keep this session with a sleep function so that the lock does remain in during backup process and other sessions can not update any table on whole database. After completing backup process, theis session will be killed in post procedure.
+#$H_MySQLCommand -e "FLUSH TABLES WITH READ LOCK; SELECT SLEEP(86400)" &
+LockSessionID=`$H_MySQLCommand -sN -e "show processlist" | grep "SELECT SLEEP(86400)" | awk '{print $1}'`
+H_LastBinlogInfo=`$H_MySQLCommand -sN -e "show binary logs" | awk '{print $1","$2}' | tail -n1 `
+FullBackupStartTime=`date "+%s"`
+FullBackupStartTimeH=`date +%F`
+
+
+
+
+

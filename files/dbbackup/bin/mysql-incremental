@@ -1,0 +1,667 @@
+#!/bin/bash
+set -x
+#MySQL credentials to do backup
+MySQLUserName=""
+MySQLPassWord=""
+#This variable contains mysql and mysqladmin command and other required option for mysql (including user and pass).
+MySQLCommand=""
+MySQLCommandOptions=""
+MySQLbinlog=""
+MySQLbinlogOptions=""
+
+
+#BinLogTable keeps the current binlog table info and their position
+declare -a BinLogTable
+#FinalBinLogFiles keeps the list of binlog files which will be got backup
+declare -a FinalBinLogFiles
+#LastBinlogPos contains the last binlog name and its position that previously daily/hourly backup have done a successfull backup. It means, until the last binglog/position, the hourly/daily backup has been done without any issue.This info is extracted from file. 
+declare IncrementalBackupInfoFile=""
+declare IncrementalBackupPathName=""
+declare LastBinlogName=""
+declare LastBinlogPOS=""
+declare LastBinlogDate=""
+#LastNumberOfHourlyBackup keeps the number of previous hourly backup that has been done.
+declare LastNumberOfHourlyBackup=""
+declare LastDailyBackupDate=""
+#BaseBackupName is extracted from date of previous daily backup and used as a base backup for subsequents incremental backupand this date is in human-readable format.
+declare BaseBackupDate=""
+declare BaseBackupDateDaily=""
+#LastBackupType keep the type of last successful backup to keep track of incremental backups.
+declare LastBackupType=""
+#SlaveEnabled keeps the database mode,slave or master.if it is filled by 1, it means, mode is Slave.
+declare SlaveEnabled=""
+#BinlogEnabled keeps status of binlog to check the binlog is configured or not.
+declare BinlogEnabled=""
+#StartBackupDate keep the time that backup is started. it is in Unix time.
+declare StartBackupDate=""
+#EndBackupDate keep the time that backup is finished. it is in Unix time.
+declare EndBackupDate=""
+#keeps the whole time that has been taken  in unix time format
+declare BackupDurationTime=""
+#BinlogPATH keeps the configured path for binlog files.
+declare BinlogPATH=""
+#TopBackupPATH keeps the top level of backup dir and status and other info and will be fetch from automysqlbackup.conf
+declare TopBackupPATH=""
+#HourlyBackupPATH variable will be specified by  BackupPATH fucntion.
+declare HourlyBackupPATH=""
+#AutomysqlbackupConfig point to the path of automysqlbackup.conf.
+declare AutomysqlbackupConfig="../conf/automysqlbackup.conf"
+#BackupIncrementalLog point to a log file that contains log of incremental bacup script
+declare BackupIncrementalLog="../log/Backup_Incremental_Log"
+#DatabaseListBackup keep list of specified databases in automysqlbackup.conf file. MUST NOT BE CHANGED MANUALLY
+declare DatabaseListBackup=""
+#DatabaseListBinlogDoDB keep list of specified databases in my.conf and binlog-do-db parametere to store binlog of listed databases. MUST NOT BE CHANGED MANUALLY
+declare DatabaseListBinlogDoDB=""
+#PostPreScripts contains Post and Pre script of Automysqlbackup file paths
+declare PostPreScripts=""
+#RotationBackups keeps number of days that incremental backups must be kept. This value is fetched from automysqlbackup.conf.
+declare RotationBackups=""
+#IgnoreDatabaseCheck if enable, the incremental backup will ignore ant mismatch on listed databases in automysqlbackup.conf compare to specified databases in binlog_do_db. default is disable, to enable it, change it to 1
+declare IgnoreDatabaseCheck="0"
+
+#declare CONFIG_externalpath="/home/grameen/mnt/Incrementalbackup"
+declare CONFIG_externalpathIncremental=""
+#declare CONFIG_externalpathIncremental_activemq_quartz="/mnt/nasbkp/motech_db1/ActiveMQ_Quartz_DbBackup"
+
+TempBinLogList=$(mktemp --suffix=_BinLogTable)
+
+#This function check if the automysqlbackup is installed or not and load the mysql credentials and backup path from /etc/automysqlbackup.conf .
+CheckAutomysqlbacupScript()
+  {
+                echo "${FUNCNAME[ 0 ]}"
+
+    if [ ! -f $AutomysqlbackupConfig ] 
+      then
+      echo "$(date '+%F %T') -- ERROR : $AutomysqlbackupConfig file was not found. Maybe the automysqlbackup script is not installed or installed in other path" >> $BackupIncrementalLog
+      exit
+    fi
+    MySQLUserName=`cat $AutomysqlbackupConfig | grep CONFIG_mysql_dump_username | cut -d "'" -f2`
+    MySQLPassWord=`cat $AutomysqlbackupConfig | grep CONFIG_mysql_dump_password | cut -d "'" -f2`
+    TopBackupPATH=`cat $AutomysqlbackupConfig | grep CONFIG_backup_dir | cut -d "'" -f2`
+    CONFIG_externalpathIncremental=`cat $AutomysqlbackupConfig | grep CONFIG_externalpathIncremental | cut -d "'" -f2`
+    
+    echo "value of incremental backup $TopBackupPATH"
+
+    IncrementalBackupInfoFile="$TopBackupPATH/status/backup_info"
+    DatabaseListBackup=`cat $AutomysqlbackupConfig | grep "CONFIG_db_names" | cut -d "=" -f2 | tr -d '()' | tr "'" ' '` 
+    RotationBackups=`cat $AutomysqlbackupConfig | grep "CONFIG_rotation_daily=" | cut -d "=" -f2`
+    PostPreScripts=`cat $AutomysqlbackupConfig | grep "CONFIG_p.*backup="| cut -d '"' -f2`
+    #Check the post and pre script files exist and does have content
+    for i in $PostPreScripts
+      {
+        if [ ! -f $i ] || [ ! -s $i ]
+          then
+          echo "$(date '+%F %T') -- ERROR : File $i does nost exist or it is empty. Please refer to the Incremental backup." >> $BackupIncrementalLog
+          exit
+        fi
+
+      }
+    
+  }
+
+
+#This function checks list of databases that their changes must be logged into the binary logs
+DatabaseInBinlogDo ()
+  {
+                echo "${FUNCNAME[ 0 ]}"
+
+    local Counter=0
+    local EqualFound=0
+    local -a DatabaseNotInIncremental
+    if [ "$IgnoreDatabaseCheck" == "0" ]
+      then
+      DatabaseListBinlogDoDB=`$MySQLCommand -sN -e "show master status" | awk '{print $3}' | tr ',' ' '`
+      if [ -z "$DatabaseListBinlogDoDB" ]
+        then
+        echo "$(date '+%F %T') -- INFO : No database is specified in binlog-do-db. Any change on all databases is being stored in binlog files. Incremental backup CAN be done " >> $BackupIncrementalLog
+      else
+        for i in $DatabaseListBackup
+          {
+
+
+            EqualFound=0
+            for j in $DatabaseListBinlogDoDB
+              {
+              if [ $i == $j ]
+                then
+                EqualFound=1
+                break
+              fi
+
+              }
+            if [ "$EqualFound" == "0" ]
+              then
+              DatabaseNotInIncremental[$Counter]=$i
+              Counter=$((Counter +1 ))
+            fi
+
+          }
+        if [ $Counter -gt 0 ]
+          then
+          echo "$(date '+%F %T') -- ERROR : | ${DatabaseNotInIncremental[*]} | databases are not specified in binlog-do-db, So it is not possible to get incremental backup for them." >> $BackupIncrementalLog
+        fi
+        
+      fi
+
+    fi
+  }
+
+#This function rotate the previous incremental backup. 
+RotateIncrementalBackup ()
+  {
+                echo "${FUNCNAME[ 0 ]}"
+
+    local TempCounter=0
+    local TempBackupDir=""
+    TempBackupDir=`find $TopBackupPATH -type d -name "*-Incremental" | sort -r`
+    for i in $TempBackupDir
+      { 
+        if [ $TempCounter -ge $RotationBackups ]
+        then
+        rm -rf $i
+        echo "$(date '+%F %T') -- INFO: $i directory of incremental backup has been removed due to rotation" >> $BackupIncrementalLog
+        fi
+        TempCounter=$((TempCounter + 1))
+      }
+
+
+  }
+#This function finds and add specified options to MySQLCommand and MySQLbinlog variables.
+FindMySQLCommand ()
+  {
+    echo "${FUNCNAME[ 0 ]}"
+
+    local MySQLCredentials=""
+    if [ $MySQLPassWord ]
+    then
+      MySQLCredentials="-u $MySQLUserName -p$MySQLPassWord"
+    else
+      MySQLCredentials="-u $MySQLUserName "
+    fi
+    
+    MySQLCommand="$(which mysql) $MySQLCredentials $MySQLCommandOptions"
+    MySQLbinlog="$(which mysqlbinlog) $MySQLbinlogOptions"
+
+  }
+
+LoadCurrentBinLogInfo() 
+  {
+    echo "${FUNCNAME[ 0 ]}"
+      
+    StartBackupDate=`date "+%s"`
+    #Before listing binary logs, get a lock on all tables to avoid any update at that moment and flush logs to create new binary log file for subsequent hourly backup
+    $MySQLCommand -sN -e "FLUSH TABLES WITH READ LOCK;show binary logs;flush logs" | sed 's/\t/,/g' > $TempBinLogList
+    if [ ! -s $TempBinLogList ]
+    then
+      echo "$(date '+%F %T') -- ERROR : There is issue to fetch BinLog data from MySQL server.Maybe credentials is not correct. You can check by runing < mysql -u root -sN -e 'show binary logs' | sed 's/\t/,/g' > " >> $BackupIncrementalLog 
+      exit
+    fi
+    
+    local Counter=0
+    while read Info;
+    do 
+      Name=`echo $Info |cut -d ',' -f1`
+      Pos=`echo $Info |cut -d ',' -f2`
+      BinLogTable[$Counter]=$Name,$Pos
+      Counter=$((Counter + 1 ))
+    done < $TempBinLogList
+    rm -f $TempBinLogList
+  }
+
+
+#Just fill LastBinlogName,LastBinlogPOS and LastBinlogDate variables.
+LoadLastBinLogInfo()
+  {
+    echo "${FUNCNAME[ 0 ]}"
+    
+    #Check the Backup_Info does exist or not. This file is very important in Incremental backup process.
+    if [ ! -f $IncrementalBackupInfoFile ]
+      then
+        echo "$(date '+%F %T') -- ERROR : $IncrementalBackupInfoFile does not exist. it means, no Full backup was excuted or maybe the file has been delered wrongly " >> $BackupIncrementalLog
+      exit
+    fi
+
+    local TempLastLine=`tail -n1 $IncrementalBackupInfoFile`
+    LastBinlogDate=`echo $TempLastLine| cut -d ',' -f1`
+    LastBinlogName=`echo $TempLastLine| cut -d ',' -f2`
+    LastBinlogPOS=`echo $TempLastLine| cut -d ',' -f3`
+    LastBackupType=`echo $TempLastLine| cut -d ',' -f4`
+    BaseBackupDate=`echo $TempLastLine| cut -d ',' -f5`
+    LastNumberOfHourlyBackup=`echo $TempLastLine| cut -d ',' -f6`
+    LastDailyBackupDate=`cat $IncrementalBackupInfoFile | grep Daily |tail -n1 | cut -d ',' -f1`
+
+    if [ -z "$LastDailyBackupDate" ] 
+      then
+      echo "$(date '+%F %T') -- ERROR : Could not be find any successfull Full Backup in Backup_Info file.Maybe the file was updated manually." >> $BackupIncrementalLog
+      exit
+    fi
+      
+      
+
+  }
+
+#This function will create the path for incremental backup and set HourlyBackupPATH variable.
+MakeBackupPATH()
+  {
+    echo "${FUNCNAME[ 0 ]}"
+    #Add IncrementalBackup path to main backup dir that is fetched from automysqlbackup.conf and create it if it does not exist.
+    TopBackupPATH="$TopBackupPATH/IncrementalBackup"
+
+    if [ ! -d $TopBackupPATH ]
+      then
+      mkdir $TopBackupPATH
+    fi
+
+    if [ ! -d $TopBackupPATH/$BaseBackupDate-Incremental ]
+      then
+      mkdir $TopBackupPATH/$BaseBackupDate-Incremental
+      
+      for i in $DatabaseListBackup
+        {
+          if [ ! -d $TopBackupPATH/$BaseBackupDate-Incremental/$i ]
+          then
+            mkdir $TopBackupPATH/$BaseBackupDate-Incremental/$i
+          fi
+        }
+
+      HourlyBackupPATH=$TopBackupPATH/$BaseBackupDate-Incremental
+    else
+      HourlyBackupPATH=$TopBackupPATH/$BaseBackupDate-Incremental
+    fi
+  }
+
+
+
+MakeBackupPATHDaily()
+        {
+                echo "${FUNCNAME[ 0 ]}"
+                #Add IncrementalBackup path to main backup dir that is fetched from automysqlbackup.conf and create it if it does not exist.
+                TopBackupPATH="$TopBackupPATH/IncrementalBackup"
+    BaseBackupDateDaily=`date +%F`
+                if [ ! -d $TopBackupPATH ]
+                        then
+                        mkdir $TopBackupPATH
+                fi
+
+                if [ ! -d $TopBackupPATH/$BaseBackupDateDaily-Incremental ]
+                        then
+                        mkdir $TopBackupPATH/$BaseBackupDateDaily-Incremental
+
+                        for i in $DatabaseListBackup
+                                {
+                                        if [ ! -d $TopBackupPATH/$BaseBackupDateDaily-Incremental/$i ]
+                                        then
+                                                mkdir $TopBackupPATH/$BaseBackupDateDaily-Incremental/$i
+                                        fi
+                                }
+
+                        HourlyBackupPATH=$TopBackupPATH/$BaseBackupDateDaily-Incremental
+                else
+                        HourlyBackupPATH=$TopBackupPATH/$BaseBackupDateDaily-Incremental
+                fi
+        }
+
+
+#This function check the last binlog file name against current binlog files. To get a correct incremental backup, last binglog file and its possition must exist in binlog list.
+CheckLastBinLogFile()
+  {
+    echo "${FUNCNAME[ 0 ]}"
+
+  local FileFound=0
+  for i in "${!BinLogTable[@]}"
+  do
+    local TempBinLogName=`echo ${BinLogTable[$i]} | cut -d ',' -f1 `
+    if [ "$TempBinLogName" == "$LastBinlogName" ]
+    then
+      FileFound=1
+    fi
+  done
+  
+  if [ "$FileFound" -eq 0 ]
+  then
+    echo "$(date '+%F %T') -- ERROR : $LastBinlogName file does not exist in current binlog files. Maybe the binlogs has been rotated or manually flushed. In this state the incremental backup could not be run successfully" >> $BackupIncrementalLog
+    exit
+  fi
+
+  }
+
+#This function fills LastDailyBackupDate variable and if the time previous daily backup is more than 26 hours, it will return error.
+CheckLastDailyBackup()
+  {
+    echo "${FUNCNAME[ 0 ]}"
+
+    local CurrentTime=`date "+%s"`
+    if [ "$CurrentTime" -lt "$LastDailyBackupDate" ]
+    then
+
+      echo "$(date '+%F %T') -- ERROR : The current time is less than the time of last daily backup. Please check the time. Current Data: `date --date @$CurrentTime` and Last Daily Backup Time: `date --date @$LastDailyBackupDate`" >> $BackupIncrementalLog
+      exit
+    fi
+
+    local DifferenceTime=$((CurrentTime - LastDailyBackupDate ))
+    #if the last date of daily backup is more than 26*7 hours, the hourly backup is terminated
+#   if [ "$DifferenceTime" -gt 93600 ]
+    if [ "$DifferenceTime" -gt 655200 ]
+    then
+
+      echo "$(date '+%F %T') -- ERROR : Current: $CurrentTime LastDailyBackupDate: $LastDailyBackupDate .it is highly likely the daily backup has not been done successfully.Having correct daily backup is required to run successfull incremental backup" >>  $BackupIncrementalLog
+      exit
+    fi
+  }
+
+#This function finds the binlog files are to being used in incremental backup process and fill FinalBinLogFiles array.
+FindBinLogNames ()
+  {
+    echo "${FUNCNAME[ 0 ]}"
+    local TempCounter=0
+    local TempFinalBinLog
+    for i in "${!BinLogTable[@]}"
+          do
+      local TempBinLogName=`echo ${BinLogTable[$i]} | cut -d ',' -f1 `
+      #extract only counter of binlog from binlog name and then compare based on this number
+      local TempBinLogNameNumber=`echo $TempBinLogName | awk -F'.' '{ print $NF }' ` 
+      local TempLastBinLogNameNumber=`echo $LastBinlogName | awk -F'.' '{ print $NF }' `
+
+                  if [ $TempBinLogNameNumber -ge $TempLastBinLogNameNumber ]
+                  then 
+        FinalBinLogFiles[$TempCounter]=${BinLogTable[$i]}
+        TempCounter=$(( TempCounter + 1 ))        
+      
+                  fi
+          done
+    
+
+    if [ `echo ${#FinalBinLogFiles[@]}` -eq 0 ]
+      then
+      echo "$(date '+%F %T') -- ERROR : The FinalBinLogFiles array is empty. It indicates that no binlog name has been added for backup" >> $BackupIncrementalLog
+      exit
+    fi
+  
+  }
+
+#This function checks if MySQL daemin is up and running and can respond to the ping from mysqladmin command.
+MySQLPing()
+  {
+    echo "${FUNCNAME[ 0 ]}"
+
+    $MySQLCommand -sN -e "\s" | grep Uptime > /dev/null
+    if [ $? -ne 0 ]
+      then
+      echo "$(date '+%F %T') -- ERROR : The database is not running or the provided credentials are not correct." >> $BackupIncrementalLog
+      exit 
+    fi
+  
+  }
+
+#This function check the binary log is enabled or not. To create incremental backup the bindary log is required
+CheckBinLogEnabled()
+  {
+    echo "${FUNCNAME[ 0 ]}"
+
+    BinlogEnabled=`$MySQLCommand -sN -e "select @@log_bin" `
+    if [ $BinlogEnabled -eq 1 ]
+      then
+        if [ -z $BinlogPATH ]
+        then
+          BinlogPATH=$(dirname `$MySQLCommand -sN -e "select @@log_bin_basename"`)
+          if [ $? -ne 0 ]
+          then
+            echo "$(date '+%F %T') -- ERROR : The BinlogPATH could not be found. Please manually set the BinlogPATH variable to binary log path based on your mysql config. BinlogPATH variable is in top of script." >> $BackupIncrementalLog
+            exit
+          fi
+        else
+          if [ ! -d $BinlogPATH ]
+          then
+            echo "$(date '+%F %T') -- ERROR : The specified directoy on BinlogPATH does not exist." >> $BackupIncrementalLog
+
+            exit
+          fi
+        fi
+      
+    else
+      echo "$(date '+%F %T') -- ERROR : The binlog is not enabled!without binlog it is not possible to do incremental backup" >> $BackupIncrementalLog
+      exit
+    fi
+    
+  }
+
+#This function check there is any Full backup runing or not. If if finds any running other full backup, the current running Incremental backup will be ignored so that next escheduled incremental backup is executed .
+CheckFullBackupRunnig ()
+  { 
+    #Fullbackup before starting backup process, does lock whole database by one special query and after finishing unlocks by killing that query."
+    local FoundSelectSleepQuery=`$MySQLCommand -sN -e "show processlist" | grep "SELECT SLEEP(86400)" | awk '{print $1}'`
+    if [ ! -z "$FoundSelectSleepQuery" ] 
+      then
+      echo "$(date '+%F %T') -- ERROR: it seems another full backup is running on database. So this current running incremental backup will be skiped. You can execute 'show processlist' to check the running sleep query. " >> $BackupIncrementalLog
+      exit
+    fi
+
+  }
+
+#This function check the database is configured in Slave mode or not.
+CheckDatabaseMode()
+  { 
+    echo "${FUNCNAME[ 0 ]}"
+
+    local ServerID
+    local LogSlaveUpdate
+    ServerID=`$MySQLCommand -sN -e "select @@server_id" `
+    if [ $ServerID -gt 1 ]
+      then
+      SlaveEnabled=1
+      LogSlaveUpdate=`$MySQLCommand -sN -e "select @@log_slave_updates" `
+      if [ "$LogSlaveUpdate" == 0 ]
+        then
+        echo "$(date '+%F %T') -- ERROR: The current database is running as Slave so log_slave_updates must be enabled to do incremental backup. " >> $BackupIncrementalLog
+        exit
+      fi
+    else
+      SlaveEnabled=0
+    fi
+  }
+
+
+#This function stop Slave (if the server is configured in Slave mode ) and lock all tables to avoid any more update on database. This function must be called before any action on backup process.
+LockTables()
+  {
+    echo "${FUNCNAME[ 0 ]}"
+
+    if [ $SlaveEnabled -eq 1 ]
+      then
+      $MySQLCommand -sN -e "STOP SLAVE"
+    fi
+    
+  }
+
+#This function start slave ( if the server is configured in Slave mode ) and unlock all tables. This fucntion must be called after finishing backup process.
+UnLockTables()
+  {
+    echo "${FUNCNAME[ 0 ]}"
+
+                if [ $SlaveEnabled -eq 1 ]
+                        then
+                        $MySQLCommand -sN -e "START SLAVE"
+    fi
+  
+  }
+
+
+#Main function for incremental backup
+BackupIncremental()
+  { 
+    echo "${FUNCNAME[ 0 ]}"
+
+
+    MakeBackupPATH
+    #This function must be completed to specify given database
+    LastNumberOfHourlyBackup=$((LastNumberOfHourlyBackup + 1))  
+    local CurrentHour=`date +%Hh%Mm`
+
+    #OriginalHourlyBackupPATH and OriginalMySQLbinlog keep the original value before adding Database specified info to it.
+    local OriginalHourlyBackupPATH="$HourlyBackupPATH"
+    local OriginalMySQLbinlog="$MySQLbinlog"
+
+  #Loop for do incremental backup for every database seperately.  
+  for DBName in $DatabaseListBackup 
+    { 
+
+    local BinLogName=""
+    local BinLogPos=""
+
+    HourlyBackupPATH="$OriginalHourlyBackupPATH/$DBName"
+    MySQLbinlog="$OriginalMySQLbinlog --database=$DBName "
+    local IncrementalBackupFileName="$DBName"_IncrementalBackup_"$BaseBackupDate"_$CurrentHour.$LastNumberOfHourlyBackup
+    IncrementalBackupPathName="$HourlyBackupPATH/$IncrementalBackupFileName"
+    if [ `echo ${#FinalBinLogFiles[@]}` -eq 1 ]
+    then
+                  BinLogName=`echo ${FinalBinLogFiles[0]} | cut -d ',' -f1 `
+                        BinLogPos=`echo ${FinalBinLogFiles[0]} | cut -d ',' -f2 `
+
+                        $MySQLbinlog --start-position $LastBinlogPOS --stop-position $BinLogPos $BinlogPATH/$LastBinlogName > $HourlyBackupPATH/$IncrementalBackupFileName
+
+      echo "START: $LastBinlogName,$LastBinlogPOS" > $HourlyBackupPATH/$IncrementalBackupFileName-info
+                        echo "$BinLogName,$BinLogPos" >> $HourlyBackupPATH/$IncrementalBackupFileName-info
+
+
+    else    
+
+      for i in "${!FinalBinLogFiles[@]}"
+        {
+          BinLogName=`echo ${FinalBinLogFiles[$i]} | cut -d ',' -f1 `
+          BinLogPos=`echo ${FinalBinLogFiles[$i]} | cut -d ',' -f2 `
+          
+          #Check if it is first element of FinalBinLogFiles or not
+          if [ $i -eq 0 ]
+            then
+            $MySQLbinlog --start-position $LastBinlogPOS $BinlogPATH/$LastBinlogName > $HourlyBackupPATH/$IncrementalBackupFileName
+                              #the name and position of first binlog is copied to info file
+                              echo "START: $LastBinlogName,$LastBinlogPOS" > $HourlyBackupPATH/$IncrementalBackupFileName-info
+          else
+            $MySQLbinlog --stop-position $BinLogPos $BinlogPATH/$BinLogName >> $HourlyBackupPATH/$IncrementalBackupFileName
+            echo "$BinLogName,$BinLogPos" >> $HourlyBackupPATH/$IncrementalBackupFileName-info
+
+          fi
+        }
+    fi
+    }
+
+
+    EndBackupDate=`date "+%s"`
+    BackupDurationTime=$((EndBackupDate - StartBackupDate ))
+    echo "$StartBackupDate,$BinLogName,$BinLogPos,Hourly,$BaseBackupDate,$LastNumberOfHourlyBackup,$BackupDurationTime" >> $IncrementalBackupInfoFile
+  }
+BackupIncrementalDaily()
+  { 
+    echo "${FUNCNAME[ 0 ]}"
+
+
+    MakeBackupPATHDaily
+    #This function must be completed to specify given database
+    LastNumberOfHourlyBackup=$((LastNumberOfHourlyBackup + 1))  
+    local CurrentHour=`date +%Hh%Mm`
+
+    #OriginalHourlyBackupPATH and OriginalMySQLbinlog keep the original value before adding Database specified info to it.
+    local OriginalHourlyBackupPATH="$HourlyBackupPATH"
+    local OriginalMySQLbinlog="$MySQLbinlog"
+
+  #Loop for do incremental backup for every database seperately.  
+  for DBName in $DatabaseListBackup 
+    { 
+
+    local BinLogName=""
+    local BinLogPos=""
+
+    HourlyBackupPATH="$OriginalHourlyBackupPATH/$DBName"
+    MySQLbinlog="$OriginalMySQLbinlog --database=$DBName "
+    local IncrementalBackupFileName="$DBName"_IncrementalBackup_"$BaseBackupDateDaily"_$CurrentHour.$LastNumberOfHourlyBackup
+    IncrementalBackupPathName="$HourlyBackupPATH/$IncrementalBackupFileName"
+    if [ `echo ${#FinalBinLogFiles[@]}` -eq 1 ]
+    then
+                  BinLogName=`echo ${FinalBinLogFiles[0]} | cut -d ',' -f1 `
+                        BinLogPos=`echo ${FinalBinLogFiles[0]} | cut -d ',' -f2 `
+
+                        $MySQLbinlog --start-position  $LastBinlogPOS --stop-position $BinLogPos $BinlogPATH/$LastBinlogName > $HourlyBackupPATH/$IncrementalBackupFileName
+
+      echo "START: $LastBinlogName,$LastBinlogPOS" > $HourlyBackupPATH/$IncrementalBackupFileName-info
+                        echo "$BinLogName,$BinLogPos" >> $HourlyBackupPATH/$IncrementalBackupFileName-info
+
+
+    else    
+
+      for i in "${!FinalBinLogFiles[@]}"
+        {
+          BinLogName=`echo ${FinalBinLogFiles[$i]} | cut -d ',' -f1 `
+          BinLogPos=`echo ${FinalBinLogFiles[$i]} | cut -d ',' -f2 `
+          
+          #Check if it is first element of FinalBinLogFiles or not
+          if [ $i -eq 0 ]
+            then
+            $MySQLbinlog  --start-position $LastBinlogPOS $BinlogPATH/$LastBinlogName > $HourlyBackupPATH/$IncrementalBackupFileName
+                              #the name and position of first binlog is copied to info file
+                              echo "START: $LastBinlogName,$LastBinlogPOS" > $HourlyBackupPATH/$IncrementalBackupFileName-info
+          else
+            $MySQLbinlog  --stop-position $BinLogPos $BinlogPATH/$BinLogName >> $HourlyBackupPATH/$IncrementalBackupFileName
+            echo "$BinLogName,$BinLogPos" >> $HourlyBackupPATH/$IncrementalBackupFileName-info
+
+          fi
+        }
+    fi
+    #Create path for incremental backup
+    mkdir -p "$CONFIG_externalpathIncremental/$DBName/"
+    #copy INcreamental backup in Tape Drives
+    copyDataInExternalDisk "$IncrementalBackupPathName" "$CONFIG_externalpathIncremental/$DBName/"
+    }
+
+
+    EndBackupDate=`date "+%s"`
+    BackupDurationTime=$((EndBackupDate - StartBackupDate ))
+    echo "$StartBackupDate,$BinLogName,$BinLogPos,Hourly,$BaseBackupDateDaily,$LastNumberOfHourlyBackup,$BackupDurationTime" >> $IncrementalBackupInfoFile
+  }
+
+
+
+RemoveGTID()
+{
+         echo "${FUNCNAME[ 0 ]}"
+         sed --in-place '/SESSION.GTID_NEXT/d' $IncrementalBackupPathName
+}
+
+copyDataInExternalDisk()
+{
+        #process_dbs "$subfolder" "$prefix" "$midfix" "$extension" "$rotation" "$rotation_divisor" "$rotation_string" 0 "$db"
+        local sourcefile="$1";
+#       local filename = "$2"i
+        local externaldir="$2";
+  RemoveOldIncrementalBackupFromTape "$externaldir"
+        cp  "$sourcefile" "$externaldir"
+  
+}
+RemoveOldIncrementalBackupFromTape()
+{
+    
+  find "$1" -mtime  +"${RotationBackups}"  -type f  -exec rm {} \;
+# find "${CONFIG_backup_dir}/${subfolder}${subsubfolder}" -mtime +"${rotation}" -type f -exec rm {} \;
+
+}
+
+##Start Main script##
+CheckAutomysqlbacupScript
+FindMySQLCommand
+MySQLPing
+CheckBinLogEnabled
+CheckFullBackupRunnig
+CheckDatabaseMode
+#DatabaseInBinlogDo
+LoadCurrentBinLogInfo
+LoadLastBinLogInfo
+CheckLastBinLogFile
+CheckLastDailyBackup
+FindBinLogNames
+BackupIncrementalDaily
+#RotateIncrementalBackup
+RemoveGTID
+echo $IncrementalBackupPathName
+#copyDataInExternalDisk "$IncrementalBackupPathName" "$CONFIG_externalpathIncremental"
+#Backup_ACTIVEMQ_Quartz_Full
+
+

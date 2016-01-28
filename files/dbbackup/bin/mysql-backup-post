@@ -1,0 +1,40 @@
+#keeps the time that bacup has been completed in unix time format
+FullBackupEndTime=""
+#keeps the whole time that has been taken  in unix time format
+FullBackupDurationTime=""
+#below variables keep the binlog info that is included in dump file.
+BinlogNameInDumpFile=""
+BinlogPosInDumpFile=""
+BinlogInfoInDumpFile=""
+LockSessionIDs=""
+
+BinlogNameInDumpFile=`zcat $cfname | head -n 30 | grep MASTER_LOG_FILE= | cut -d "=" -f2 | sed -e "s/'//g" | cut -d "," -f1`
+BinlogPosInDumpFile=`zcat $cfname | head -n 30 | grep MASTER_LOG_FILE= | cut -d "=" -f3 | sed -e "s/^\([0-9][0-9]*\).*$/\1/"`
+BinlogInfoInDumpFile="$BinlogNameInDumpFile,$BinlogPosInDumpFile"
+
+
+#Find all lock query and kill them
+LockSessionIDs=`$H_MySQLCommand -sN -e "show processlist" | grep "SELECT SLEEP(86400)" | awk '{print $1}'`
+for i in $LockSessionIDs
+  {
+    $H_MySQLCommand -e "kill $i" 2> /dev/null 
+    echo "$(date '+%F %T') -- INFO : The Special Lock Query (ID: $i) has been killed. " >> $FullBackupScriptsLogFile
+
+  }
+
+
+#Compare binlog info before starting backup procaess with binlog info included in dump file. Both of them must be the same and if they are not equal, the Lock was not acquired suscessfully and during backup process, the binlog info has been changed.
+if [ "$H_LastBinlogInfo" != "$BinlogInfoInDumpFile" ]
+  then
+    echo "$(date '+%F %T') -- ERROR : Binlog info before starting backup is different with Binlog ingo after completing backup process. it indicates, the lock was not acquired successfully and the full backup is not suitable to use for incremental backup." >> $FullBackupScriptsLogFile
+
+  else
+    echo "$(date '+%F %T') -- SUCCESS : Full backup has been done." >> $FullBackupScriptsLogFile
+    FullBackupEndTime=`date "+%s"`
+    FullBackupDurationTime=$((FullBackupEndTime - FullBackupStartTime ))
+    echo "$FullBackupStartTime,$BinlogNameInDumpFile,$BinlogPosInDumpFile,Daily,$FullBackupStartTimeH,0,$FullBackupDurationTime" >> $IncrementalBackupInfoPath
+
+fi
+
+
+

@@ -42,3 +42,22 @@
     - include:  roles/db/tasks/activemq.yml
   tags:
     - active
+
+- name: configure and deploy dbbackupScripts in db server
+  hosts: slavedb_motech
+  remote_user: grameen
+  serial: 1
+  tasks:
+   - include:  roles/db/tasks/dbbackup.yml
+  tags:
+   - dbbackupscript
+- name: configure and deploy dbbackupScripts in db server
+  hosts: slavedb_report
+  remote_user: grameen
+  serial: 1
+  tasks:
+   - include:  roles/db/tasks/dbbackup_report.yml
+  tags:
+   - dbbackupscript_report
+
+
