@@ -84,4 +84,4 @@ Steps to compile and execute JAR file
 ```
 
 Modify config.properties files and place at the same level where JAR file will be executed, Provide LDAP and DB credentials in this file
-Sample file is available at [Resources file](../tree/master/ldap/src/main/resources/config.properties)
+Sample file is available at [Resources file](./ldap/src/main/resources/config.properties)
