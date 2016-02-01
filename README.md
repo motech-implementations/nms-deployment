@@ -74,3 +74,14 @@ Steps to deploy on Report Slave server
 ```sh
   ansible-playbook -vvv  site.yml -i hosts --ask-vault-pass --tags dbbackupscript_report  --ask-sudo-pass
 ```
+
+###LDAP Plugin to manage STATE and Districts records in LDAP DB. 
+
+Steps to compile and execute JAR file 
+
+```sh
+	mvn clean install 
+```
+
+Modify config.properties files and place at the same level where JAR file will be executed, Provide LDAP and DB credentials in this file
+Sample file is available at [Resources file]./ldap/src/main/resources
