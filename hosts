@@ -27,8 +27,13 @@
 192.168.200.4:1027 ansible_connection=local
 
 [slavedb_motech]
+#10.203.10.50
+#10.204.23.193
 192.168.200.6:1027
+
 [slavedb_report]
+#10.203.10.50
+#10.204.23.193
 192.168.200.68:1027
 
 #[stagingwebserver]
