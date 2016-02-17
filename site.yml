@@ -61,3 +61,10 @@
    - dbbackupscript_report
 
 
+- name: configure and deploy the Report Web servers
+  hosts: reportwebserver
+  remote_user: grameen
+  roles:
+    - reportweb
+  tags:
+    - reportweb
