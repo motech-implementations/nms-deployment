@@ -62,7 +62,7 @@
 
 
 - name: configure and deploy the Report Web servers
-  hosts: stagingwebserver
+  hosts: reportwebserver
   remote_user: grameen
   roles:
     - reportweb
