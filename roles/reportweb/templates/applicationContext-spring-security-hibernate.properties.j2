@@ -1,0 +1,10 @@
+#jdbc.driver=org.hsqldb.jdbcDriver
+#jdbc.url=jdbc:hsqldb:hsql://localhost:9001/hibernate
+#jdbc.username=hibuser
+#jdbc.password=password
+#hibernate.dialect=org.hibernate.dialect.HSQLDialect
+jdbc.driver=com.mysql.jdbc.Driver
+jdbc.url=jdbc:mysql://{{ reportdbip }}/hibernate
+jdbc.username={{ reportdbuser }}
+jdbc.password={{ reportpassword }}
+hibernate.dialect=org.hibernate.dialect.MySQLDialect

@@ -38,6 +38,6 @@
 
 #[stagingwebserver]
 # 10.203.10.11
-#[stagingdbserver]
-#10.203.10.50
+[stagingwebserver]
+10.203.10.50
 

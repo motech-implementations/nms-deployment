@@ -1,0 +1,20 @@
+ldap.host = {{ ldapip }}
+ldap.port = 10389
+ldap.useSsl = false
+ldap.admin.username = {{ ldapusername }}
+ldap.admin.password = {{ ldappassword }}
+
+ldap.cn.masterAdmin = Master Administrator
+ldap.ou.users = users
+ldap.ou.roles = roles
+ldap.dc = nms
+ldap.userClass = person
+ldap.extendedUserClass = inetOrgPerson
+ldap.roleClass = organizationalRole
+ldap.adminRoleClass = groupOfNames
+ldap.nationalRole = National View
+ldap.nationalUserAdminRole = National User Administrator
+ldap.roleSuffix = View
+ldap.adminRoleSuffix = User Administrator
+ldap.occupantAttrName = roleOccupant
+ldap.memberAttrName = member
