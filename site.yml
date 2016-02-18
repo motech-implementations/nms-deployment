@@ -62,9 +62,11 @@
 
 
 - name: configure and deploy the Report Web servers
-  hosts: reportwebserver
+  hosts: stagingwebserver
   remote_user: grameen
   roles:
     - reportweb
+  tasks:
+    - include:  roles/reportweb/tasks/main.yml
   tags:
     - reportweb

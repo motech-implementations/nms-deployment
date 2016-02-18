@@ -3,7 +3,7 @@
 - name: Copy applicationContext-spring-security-hibernate related files
   template: 
       src=applicationContext-spring-security-hibernate.j2
-      dest={{ Biserver }}/pentaho-solutions/system/applicationContext-spring-security-hibernate
+      dest=/usr/local/biserver-ce/pentaho-solutions/system/applicationContext-spring-security-hibernate
       owner={{ ansible_ssh_user }}
       group=root
   become: yes
@@ -12,17 +12,16 @@
 - name: Copy MySQL Hibernate CFG
   tempalte:
       src=mysql5.hibernate.cfg.j2
-      dest={{ Biserver }}/pentaho-solutions/system/hibernate/mysql5.hibernate.cfg
+      dest=/usr/local/biserver-ce/pentaho-solutions/system/hibernate/mysql5.hibernate.cfg
       owner={{ ansible_ssh_user }}
       group=root
   become: yes
   become_method: sudo
 
-
 - name: Copy Jackrabbit CFG
   tempalte:
       src=repository.j2
-      dest={{ Biserver }}/pentaho-solutions/system/jackrabbit/repository.xml
+      dest=/usr/local/biserver-ce/pentaho-solutions/system/jackrabbit/repository.xml
       owner={{ ansible_ssh_user }}
       group=root
   become: yes
@@ -31,7 +30,7 @@
 - name: Copy Jackrabbit default configuration files
   tempalte:
       src=workspace.xml.j2
-      dest={{ Biserver }}/pentaho-solutions/system/jackrabbit/repository/workspaces/default/workspace.xml
+      dest=/usr/local/biserver-ce/pentaho-solutions/system/jackrabbit/repository/workspaces/default/workspace.xml
       owner={{ ansible_ssh_user }}
       group=root
   become: yes
@@ -40,10 +39,8 @@
 - name: Copy Jackrabbit security configuration files
   tempalte:
       src=workspace_security.xml.j2
-      dest={{ Biserver }}/pentaho-solutions/system/jackrabbit/repository/workspaces/security/workspace.xml
+      dest=/usr/local/biserver-ce/pentaho-solutions/system/jackrabbit/repository/workspaces/security/workspace.xml
       owner={{ ansible_ssh_user }}
       group=root
   become: yes
   become_method: sudo
-
-
