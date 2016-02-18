@@ -2,16 +2,16 @@
 
 - name: Copy applicationContext-spring-security-hibernate related files
   template: 
-      src=applicationContext-spring-security-hibernate.j2
-      dest=/usr/local/biserver-ce/pentaho-solutions/system/applicationContext-spring-security-hibernate
+      src=applicationContext-spring-security-hibernate.properties.j2
+      dest=/usr/local/biserver-ce/pentaho-solutions/system/applicationContext-spring-security-hibernate.properties
       owner={{ ansible_ssh_user }}
       group=root
   become: yes
   become_method: sudo
 
 - name: Copy MySQL Hibernate CFG
-  tempalte:
-      src=mysql5.hibernate.cfg.j2
+  template:
+      src=mysql5.hibernate.cfg.xml.j2
       dest=/usr/local/biserver-ce/pentaho-solutions/system/hibernate/mysql5.hibernate.cfg
       owner={{ ansible_ssh_user }}
       group=root
@@ -19,27 +19,45 @@
   become_method: sudo
 
 - name: Copy Jackrabbit CFG
-  tempalte:
-      src=repository.j2
+  template:
+      src=repository.xml.j2
       dest=/usr/local/biserver-ce/pentaho-solutions/system/jackrabbit/repository.xml
       owner={{ ansible_ssh_user }}
       group=root
   become: yes
   become_method: sudo
 
-- name: Copy Jackrabbit default configuration files
-  tempalte:
-      src=workspace.xml.j2
-      dest=/usr/local/biserver-ce/pentaho-solutions/system/jackrabbit/repository/workspaces/default/workspace.xml
+- name: Copy LDAP Security file
+  template:
+      src=applicationContext-pentaho-security-ldap.xml.j2
+      dest=/usr/local/biserver-ce/pentaho-solutions/system/applicationContext-pentaho-security-ldap.xml
       owner={{ ansible_ssh_user }}
       group=root
   become: yes
   become_method: sudo
 
-- name: Copy Jackrabbit security configuration files
-  tempalte:
-      src=workspace_security.xml.j2
-      dest=/usr/local/biserver-ce/pentaho-solutions/system/jackrabbit/repository/workspaces/security/workspace.xml
+- name: Copy LDAP Secuity file 
+  template:
+      src=applicationContext-security-ldap.properties.j2
+      dest=/usr/local/biserver-ce/pentaho-solutions/system/applicationContext-security-ldap.properties
+      owner={{ ansible_ssh_user }}
+      group=root
+  become: yes
+  become_method: sudo
+
+- name: Copy LDAP Properties files
+  template:
+      src=security.properties.j2
+      dest=/usr/local/biserver-ce/pentaho-solutions/system/security.properties
+      owner={{ ansible_ssh_user }}
+      group=root
+  become: yes
+  become_method: sudo
+
+- name: Copy LDAP Properties files for NMS USER manager Plugin
+  template:
+      src=ldap.properties.j2
+      dest=/usr/local/biserver-ce/pentaho-solutions/system/nms-ldap-manager/ldap.properties
       owner={{ ansible_ssh_user }}
       group=root
   become: yes
